@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+data/
+out/
+flink-job/target/
+dependency-reduced-pom.xml
+.DS_Store
+checkpoints/
+.tmp/
+*.log
