@@ -1,0 +1,13 @@
+% Owner: Kristian. Target length: 0.2 pages. Revisit once Evaluation is final.
+\section{Conclusion}
+
+We built a streaming system that detects EMA crossovers for every symbol of three exchanges over a full trading week, and showed that it is both correct and fast: three independent implementations agree exactly on 1.86 million EMA values and 11,349 advisories, and the Flink job processes about 1.6 million events per second on four cores with a median delay of about 0.2\,s after a window can close.
+Treating correctness as a measurable property, through a batch oracle and a diff tool, made every optimisation and every new feature cheap to check.
+The data set analysis paid off as much as the engineering: the out-of-orderness bound, the quarantine and the heartbeats all follow from measured properties of the data, not from guesses.
+
+\paragraph{Limitations.}
+All measurements ran on a single laptop with one Kafka broker, so the scaling results show how the job uses more cores, not how it behaves across machines and network links.
+The Flink job implements only the \texttt{skip} policy for empty windows, and live subscription changes take effect from the next window close rather than immediately.
+
+\paragraph{Future work.}
+Natural next steps are a multi-node deployment with a replicated Kafka cluster, pushing results to the dashboard live over a WebSocket, and suppressing advisories until the EMAs are warmed up based on a confidence measure rather than a fixed rule.

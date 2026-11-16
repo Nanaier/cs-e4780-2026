@@ -1,0 +1,41 @@
+% CS-E4780 course project report. Upload the whole report/ folder to Overleaf
+% (New Project -> Upload Project, zip of report/). acmart.cls is built into Overleaf.
+\documentclass[sigconf,nonacm]{acmart}
+\settopmatter{printacmref=false, printccs=false, printfolios=true}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+
+\usepackage{booktabs}
+\usepackage{xcolor}
+% \todo{} marks open items in red; search the PDF for "TODO" before submitting.
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+\begin{document}
+
+\title{Detecting Trading Trends in Financial Tick Data with Kafka and Flink}
+\subtitle{CS-E4780 Scalable Systems and Data Management, Course Project 2026}
+
+\author{Person A}
+\affiliation{\institution{Aalto University}\city{Espoo}\country{Finland}}
+\author{Person B}
+\affiliation{\institution{Aalto University}\city{Espoo}\country{Finland}}
+\author{Kristian Lalev}
+\affiliation{\institution{Aalto University}\city{Espoo}\country{Finland}}
+
+\input{sections/abstract}
+
+\maketitle
+
+\input{sections/introduction}   % owner: Kristian
+\input{sections/dataset}        % owner: B
+\input{sections/architecture}   % owner: A
+\input{sections/implementation} % owner: A (includes design-space.tex, owner: Kristian)
+\input{sections/evaluation}     % owner: B
+\input{sections/conclusion}     % owner: Kristian
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\appendix
+\input{sections/contributions}  % everyone, collected by Kristian
+
+\end{document}

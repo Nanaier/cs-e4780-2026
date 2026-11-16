@@ -50,7 +50,7 @@ One day only: `scripts/fetch_day.sh 08-11-21`. A local file works too: `scripts/
 | `trading/latency.py`, `scripts/latency_run.sh` | Engine-independent latency from the moment each window could first close, with a paced replay |
 | `trading/bench.py` | Throughput benchmark: drains a preloaded topic with the Docker Flink cluster at several parallelisms |
 | `trading/partition_map.py` | Balanced symbol -> partition map from one day's tick counts (largest symbol first, to the least loaded partition), for `replay.py --partition-map` |
-| `trading/viz.py` | Static HTML dashboard: watchlist, price with EMA38/EMA100 and buy/sell markers, market breadth |
+| `trading/viz.py` | Static HTML dashboard: watchlist filterable by exchange, security type and trend and sortable by latest signal or crossovers; price with EMA38/EMA100 and buy/sell markers; EMA-gap trend panel shaded by regime; market breadth over the filtered symbols; first-window (warm-up) signals hidden by default; `#SYMBOL` links; `--include SYM,...` always shows given symbols |
 | `docs/decisions.md` | Open questions in the brief, the proposed default for each, and the switch that changes it |
 | `flink-job/` | The Flink DataStream job |
 | `docker-compose.yml`, `docker-compose.flink.yml` | Kafka broker; Flink JobManager and TaskManager with CPU pinning for the core-count runs |

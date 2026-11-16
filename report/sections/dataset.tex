@@ -1,0 +1,13 @@
+% Owner: Person B. Target length: 0.6 pages. The rubric asks for a "strong focus on dataset analysis".
+% Sources: data/week/stats/*.json (copy to results/), docs/decisions.md #1, #2, #8, #10, #15.
+\section{Data Set Analysis}
+\label{sec:dataset}
+
+\todo{B: write this section. Planned content:}
+\begin{itemize}
+  \item Rows per kind per day (price, quote, housekeeping, metadata, zero-price): about 59.4M price events of 289M rows. Table.
+  \item Price events per exchange (FR about 55\%, NL 28\%, ETR 17\%) and per security type (equity vs index).
+  \item Long tail: rank vs tick count per symbol, log-log figure; share of volume in the top 100 symbols.
+  \item Out-of-order lag percentiles (08.11: p99 300\,ms, p99.9 374\,ms), which motivates the 300\,ms bound.
+  \item Anomalies: 5,506 index trades stamped 10.11 01:00 arriving 18:56 (would change 37\% of EMA rows); 1,175 Xetra closing-auction trades with a stale system time; weekend zero-price resets.
+\end{itemize}
