@@ -95,7 +95,7 @@ def figure(height=2.2, nrows=1, ncols=1, **kwargs):
 
 def save(fig, name):
     RESULTS.mkdir(parents=True, exist_ok=True)
-    fig.savefig(RESULTS / f"{name}.pdf", bbox_inches="tight")
+    fig.savefig(RESULTS / f"{name}.pdf", bbox_inches="tight", metadata={"CreationDate": None})
     plt.close(fig)
 
 
