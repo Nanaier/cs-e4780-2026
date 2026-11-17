@@ -1,0 +1,2 @@
+exchange,sec_type,trades,symbols,stamped_from,stamped_to,min_hours_after_sys,max_hours_after_sys
+ETR,E,1175,552,2021-11-08 17:30:00.146000,2021-11-12 17:31:03.886000,1.0,8.51
