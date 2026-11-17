@@ -1,0 +1,10 @@
+measure,value
+symbols,4970
+trades,59391670
+busiest_symbol_pct,0.27
+top10_pct,2.71
+top100_pct,26.9
+top1000_pct,65.64
+median_trades_per_symbol,10510.0
+symbols_under_100_trades,1387
+symbols_under_10_trades,595

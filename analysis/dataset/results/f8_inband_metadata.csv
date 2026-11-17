@@ -1,0 +1,11 @@
+measure,value
+metadata_rows,56016
+symbols_with_metadata_rows,5479
+symbols_with_a_value,5478
+symbols_with_only_empty_rows,1
+rows_replay_sends,5479
+symbols_replay_sends_for,5478
+symbols_sent_more_than_once,A3E5ED.ETR
+symbols_whose_first_metadata_follows_first_trade,2
+advisories_without_metadata_as_of_window_close,22
+advisories,11349
