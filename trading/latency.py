@@ -9,12 +9,13 @@ from pathlib import Path
 
 from confluent_kafka import OFFSET_BEGINNING, Consumer, KafkaError, TopicPartition
 
-from trading.core import HEARTBEAT
+from trading.core import HEARTBEAT, METADATA
 from trading.files import percentiles
 
 WINDOW_MS = 300_000
 POINTS = (50, 95, 99, 99.9)
 HEARTBEAT_KEY = HEARTBEAT.encode()
+METADATA_KEY = METADATA.encode()
 
 
 def read_topic(bootstrap, topic, handle, isolation="read_committed"):
@@ -105,6 +106,8 @@ class Closable:
 
     def tick(self, partition, value):
         fields = value.split(b",")
+        if fields[1] == METADATA_KEY:
+            return
         if fields[0] == HEARTBEAT_KEY:
             self.heartbeats += 1
         else:

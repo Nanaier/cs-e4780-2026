@@ -5,6 +5,11 @@ import sys
 from pathlib import Path
 
 
+def header(path):
+    with Path(path).open() as fh:
+        return next(csv.reader(fh))
+
+
 def load(path, key_fields, value_fields):
     rows = {}
     with Path(path).open() as fh:
@@ -54,11 +59,16 @@ def main(argv=None):
         load(Path(args.right, "ema.csv"), ["symbol", "window_end_ms"], ["close", "ema38", "ema100"]),
         [True, True, True], args.rel_tol, args.show,
     )
+    left_adv, right_adv = Path(args.left, "advisories.csv"), Path(args.right, "advisories.csv")
+    enriched = all("isin" in header(p) for p in (left_adv, right_adv))
+    fields, numeric = ["advisory", "ema38", "ema100"], [False, True, True]
+    if enriched:
+        fields, numeric = fields + ["isin", "currency"], numeric + [False, False]
     adv_ok = compare(
-        "advisories",
-        load(Path(args.left, "advisories.csv"), ["symbol", "window_end_ms"], ["advisory", "ema38", "ema100"]),
-        load(Path(args.right, "advisories.csv"), ["symbol", "window_end_ms"], ["advisory", "ema38", "ema100"]),
-        [False, True, True], args.rel_tol, args.show,
+        "advisories" + (" (with isin,currency)" if enriched else ""),
+        load(left_adv, ["symbol", "window_end_ms"], fields),
+        load(right_adv, ["symbol", "window_end_ms"], fields),
+        numeric, args.rel_tol, args.show,
     )
     sys.exit(0 if ema_ok and adv_ok else 1)
 

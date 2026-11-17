@@ -1,9 +1,13 @@
+from bisect import bisect_left
+from collections import defaultdict
 from dataclasses import dataclass
 
 WINDOW_MS = 300_000
 SHORT_J = 38
 LONG_J = 100
 HEARTBEAT = "__heartbeat__"
+METADATA = "M"
+UNKNOWN_INSTRUMENT = ("", "")
 
 
 @dataclass(frozen=True)
@@ -49,6 +53,22 @@ def quarantined(event_ts, sys_ts, quarantine_ms):
 
 def quarantine_sql(quarantine_ms):
     return f"(sys_ts IS NOT NULL AND sys_ts - event_ts > {int(quarantine_ms)})"
+
+
+class InstrumentVersions:
+    def __init__(self):
+        self.versions = defaultdict(list)
+
+    def add(self, symbol, ts, isin, currency):
+        self.versions[symbol].append((ts, (isin, currency)))
+
+    def as_of(self, symbol, cutoff):
+        versions = self.versions.get(symbol)
+        known = bisect_left(versions, cutoff, key=lambda version: version[0]) if versions else 0
+        if known == 0:
+            return UNKNOWN_INSTRUMENT
+        del versions[:known - 1]
+        return versions[0][1]
 
 
 def crossover(prev_short, prev_long, short, long):

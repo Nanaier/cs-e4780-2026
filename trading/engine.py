@@ -4,19 +4,12 @@ import sys
 import time
 from pathlib import Path
 
-from trading.core import HEARTBEAT, EmaCrossoverOperator, Params, quarantined
+from trading.core import HEARTBEAT, METADATA, EmaCrossoverOperator, InstrumentVersions, Params, quarantined
 from trading.files import TICK_COLUMNS, ResultWriter, iter_ticks, load_subscriptions, local_time, percentiles, tick_files
 
 
-def load_instruments(bootstrap, topic):
-    from trading.topics import read_table
-
-    table, _ = read_table(bootstrap, topic)
-    return {symbol: (value.split(",") + ["", "", "", ""])[2:4] for symbol, value in table.items()}
-
-
 class KafkaResults:
-    def __init__(self, bootstrap, ema_topic, advisories_topic, instruments=None):
+    def __init__(self, bootstrap, ema_topic, advisories_topic, instruments=None, bound_ms=0):
         from confluent_kafka import Producer
 
         self.producer = Producer({
@@ -29,6 +22,7 @@ class KafkaResults:
         self.ema_topic = ema_topic
         self.advisories_topic = advisories_topic
         self.instruments = instruments
+        self.bound_ms = bound_ms
         self.newest_ingest_ms = 0
 
     def _send(self, topic, symbol, fields):
@@ -46,7 +40,7 @@ class KafkaResults:
     def write_advisory(self, symbol, window_end, kind, ema38, ema100, prev38, prev100):
         fields = [str(window_end), local_time(window_end), kind, repr(ema38), repr(ema100), repr(prev38), repr(prev100)]
         if self.instruments is not None:
-            fields += self.instruments.get(symbol, ("", ""))
+            fields += self.instruments.as_of(symbol, window_end + self.bound_ms)
         self._send(self.advisories_topic, symbol, fields)
 
     def poll(self):
@@ -128,7 +122,12 @@ def run_kafka(args, op, results):
             for message in messages:
                 if message.error():
                     continue
-                symbol, _, last, event_ts, seq, ingest_ms = message.value().decode().split(",")
+                fields = message.value().decode().split(",")
+                if fields[1] == METADATA:
+                    if results.instruments is not None:
+                        results.instruments.add(fields[0], int(fields[3]), fields[6], fields[7])
+                    continue
+                symbol, _, last, event_ts, seq, ingest_ms = fields
                 event_ts = int(event_ts)
                 p = message.partition()
                 if event_ts > partition_max.get(p, -1):
@@ -163,7 +162,9 @@ def main(argv=None):
                         help="a partition silent this long stops holding back the watermark")
     parser.add_argument("--ema-topic", default="ema", help="Kafka mode: topic for EMA rows")
     parser.add_argument("--advisories-topic", default="advisories", help="Kafka mode: topic for advisories")
-    parser.add_argument("--instruments-topic", help="Kafka mode: compacted metadata topic; adds isin,currency to advisories")
+    parser.add_argument("--enrich", action="store_true",
+                        help="Kafka mode: add isin,currency to advisories from the in-band metadata rows, "
+                             "as known when the window could first close")
     parser.add_argument("--out", default="out/stream")
     parser.add_argument("--subscriptions", default="all", help="file with one symbol per line, or 'all'")
     parser.add_argument("--out-of-orderness-ms", type=int, default=0)
@@ -175,11 +176,13 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if bool(args.ticks) == bool(args.kafka):
         parser.error("give exactly one of --ticks or --kafka")
+    if args.enrich and not args.kafka:
+        parser.error("--enrich needs --kafka")
 
     Path(args.out).mkdir(parents=True, exist_ok=True)
     if args.kafka:
-        instruments = load_instruments(args.kafka, args.instruments_topic) if args.instruments_topic else None
-        writer = KafkaResults(args.kafka, args.ema_topic, args.advisories_topic, instruments)
+        instruments = InstrumentVersions() if args.enrich else None
+        writer = KafkaResults(args.kafka, args.ema_topic, args.advisories_topic, instruments, args.out_of_orderness_ms)
     else:
         writer = ResultWriter(args.out)
     latencies = []

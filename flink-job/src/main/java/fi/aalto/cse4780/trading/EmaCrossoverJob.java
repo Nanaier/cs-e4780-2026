@@ -55,13 +55,17 @@ public final class EmaCrossoverJob {
 
         WatermarkStrategy<Tick> watermarks = WatermarkStrategy
                 .<Tick>forBoundedOutOfOrderness(Duration.ofMillis(params.getLong("out-of-orderness-ms", 0L)))
-                .withTimestampAssigner((tick, recordTimestamp) -> tick.eventTs());
+                .withTimestampAssigner((tick, recordTimestamp) -> tick.watermarkTs());
         Set<String> subscribedSymbols = loadSubscriptions(params.get("subscriptions", "all"));
         boolean suppressFirst = params.has("suppress-first");
+        if (params.has("instruments-topic")) {
+            throw new IllegalArgumentException("--instruments-topic is gone: metadata now travels in the ticks topic "
+                    + "(replay.py --with-metadata) and --enrich adds it to advisories");
+        }
 
         switch (params.get("source", "file")) {
-            case "file" -> runFiles(env, params, watermarks,
-                    new EmaCrossoverFunction(subscribedSymbols, suppressFirst, false));
+            case "file" -> runFiles(env, params, watermarks, new EmaCrossoverFunction(subscribedSymbols, suppressFirst,
+                    false, params.has("enrich"), params.getLong("out-of-orderness-ms", 0L)));
             case "kafka" -> runKafka(env, params, watermarks, subscribedSymbols, suppressFirst);
             default -> throw new IllegalArgumentException("--source must be file or kafka");
         }
@@ -94,7 +98,7 @@ public final class EmaCrossoverJob {
                                 .map(line -> ResultFiles.ADVISORY_TAG + "," + line),
                         emaLines.getSideOutput(EmaCrossoverFunction.LATE_TICKS)
                                 .map(tick -> ResultFiles.LATE_TAG + "," + tick.symbol()))
-                .sinkTo(context -> new ResultFiles(outDir))
+                .sinkTo(context -> new ResultFiles(outDir, params.has("enrich")))
                 .name("result-files")
                 .setParallelism(1);
 
@@ -104,8 +108,9 @@ public final class EmaCrossoverJob {
     private static void runKafka(StreamExecutionEnvironment env, ParameterTool params, WatermarkStrategy<Tick> watermarks,
                                  Set<String> subscribedSymbols, boolean suppressFirst) throws Exception {
         String bootstrap = params.get("bootstrap", "localhost:9092");
-        String instrumentsTopic = params.get("instruments-topic");
         String subscriptionsTopic = params.get("subscriptions-topic");
+        boolean enrich = params.has("enrich");
+        long boundMs = params.getLong("out-of-orderness-ms", 0L);
         if (subscriptionsTopic != null && subscribedSymbols != null) {
             throw new IllegalArgumentException("give --subscriptions or --subscriptions-topic, not both");
         }
@@ -123,15 +128,13 @@ public final class EmaCrossoverJob {
                 .filter(tick -> !tick.heartbeat())
                 .name("drop-heartbeats");
         SingleOutputStreamOperator<String> emaLines;
-        if (instrumentsTopic == null && subscriptionsTopic == null) {
+        if (subscriptionsTopic == null) {
             emaLines = ticks.keyBy(Tick::symbol)
-                    .process(new EmaCrossoverFunction(subscribedSymbols, suppressFirst, true));
+                    .process(new EmaCrossoverFunction(subscribedSymbols, suppressFirst, true, enrich, boundMs));
         } else {
             emaLines = ticks.keyBy(Tick::symbol)
-                    .connect(controlStream(env, params, bootstrap, instrumentsTopic, subscriptionsTopic)
-                            .keyBy(Control::symbol))
-                    .process(new ControlledEmaCrossoverFunction(subscribedSymbols, suppressFirst, true,
-                            instrumentsTopic != null, subscriptionsTopic != null));
+                    .connect(controlStream(env, params, bootstrap, subscriptionsTopic).keyBy(Control::symbol))
+                    .process(new ControlledEmaCrossoverFunction(suppressFirst, true, enrich, boundMs));
         }
         DeliveryGuarantee delivery = deliveryGuarantee(params);
         String transactionalIdPrefix = params.get("transactional-id-prefix", "ema-crossover-" + UUID.randomUUID());
@@ -145,19 +148,14 @@ public final class EmaCrossoverJob {
     }
 
     private static DataStream<Control> controlStream(StreamExecutionEnvironment env, ParameterTool params, String bootstrap,
-                                                     String instrumentsTopic, String subscriptionsTopic) {
-        List<String> topics = new ArrayList<>();
-        for (String topic : new String[] {instrumentsTopic, subscriptionsTopic}) {
-            if (topic != null) {
-                topics.add(topic);
-            }
-        }
+                                                     String subscriptionsTopic) {
+        List<String> topics = List.of(subscriptionsTopic);
         KafkaSourceBuilder<Control> builder = KafkaSource.<Control>builder()
                 .setBootstrapServers(bootstrap)
                 .setTopics(topics)
                 .setGroupId(params.get("group", "flink-ema-crossover") + "-control")
                 .setStartingOffsets(OffsetsInitializer.earliest())
-                .setDeserializer(new ControlDeserializer(subscriptionsTopic));
+                .setDeserializer(new ControlDeserializer());
         if (params.has("bounded")) {
             builder.setBounded(OffsetsInitializer.latest());
         }
@@ -207,8 +205,8 @@ public final class EmaCrossoverJob {
         if (!"kafka".equals(params.get("source", "file"))) {
             throw new IllegalArgumentException("--checkpoint-ms needs --source kafka");
         }
-        if (!params.has("bounded") && (params.has("instruments-topic") || params.has("subscriptions-topic"))) {
-            throw new IllegalArgumentException("--checkpoint-ms with control topics needs --bounded: "
+        if (!params.has("bounded") && params.has("subscriptions-topic")) {
+            throw new IllegalArgumentException("--checkpoint-ms with --subscriptions-topic needs --bounded: "
                     + "ControlCatchUp is not part of the checkpoint and would hold event time back after a restore");
         }
         config.set(CheckpointingOptions.CHECKPOINTING_INTERVAL, Duration.ofMillis(params.getLong("checkpoint-ms")));

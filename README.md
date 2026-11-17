@@ -19,7 +19,7 @@ The full set is 5 weekday files of 4.7–5.5 GB each (24.9 GB) plus two small we
 
 ```bash
 make fetch-week   # per day: download -> keep price + metadata rows -> gzip (about 59M price events in total)
-make prep-week    # -> data/week/ticks/*.parquet, data/week/metadata.parquet, data/week/stats/*.json
+make prep-week    # -> data/week/ticks/*.parquet, data/week/metadata_events.parquet, data/week/metadata.parquet, data/week/stats/*.json
 make stream TICKS=data/week/ticks META=data/week/metadata.parquet
 ```
 
@@ -34,13 +34,13 @@ One day only: `scripts/fetch_day.sh 08-11-21`. A local file works too: `scripts/
 | Path | What it does |
 |---|---|
 | `scripts/filter.awk`, `scripts/fetch_day.sh` | Streaming filter for the raw 40-column CSV: keeps price rows (SecType E/I, Last > 0) and metadata rows, counts every other row kind |
-| `trading/prep.py` | Raw or filtered CSV -> `ticks/*.parquet` (and plain CSV for Flink), `metadata.parquet`, `stats/*.json` |
+| `trading/prep.py` | Raw or filtered CSV -> `ticks/*.parquet` (and plain CSV for Flink), `metadata_events.parquet` (every metadata row in feed order), `metadata.parquet` (latest per symbol, for the dashboard), `stats/*.json` |
 | `trading/synth.py` | Synthetic trading days in the raw layout, with quotes, housekeeping rows, zero-price resets, out-of-order and late events, and a long-tailed symbol distribution |
 | `trading/core.py` | The operator: event-time windows, watermark, per-symbol EMA state, crossover detection, subscriptions |
 | `trading/engine.py` | Runs the operator from tick files or from Kafka; writes `ema.csv`, `advisories.csv`, `metrics.json` |
 | `trading/reference.py` | Independent batch implementation (DuckDB + Python) used as the correctness oracle |
 | `trading/diff.py` | Compares two result folders; exit code 0 only when identical |
-| `trading/replay.py` | Replays ticks into Kafka, keyed by symbol, as fast as possible or at a speed factor; optionally routes quarantined ticks to their own topic, publishes the metadata first and sends heartbeats to every partition |
+| `trading/replay.py` | Replays ticks into Kafka, keyed by symbol, as fast as possible or at a speed factor; optionally routes quarantined ticks to their own topic, sends metadata changes in-band at their feed position and sends heartbeats to every partition |
 | `trading/heartbeat_check.py` | Checks the heartbeat rule against the tick files in replay order: ticks behind the heartbeat watermark, per margin |
 | `trading/collect.py` | Reads the `ema` and `advisories` topics back into CSV files and reports latency percentiles; `--isolation`, `--dedupe` |
 | `trading/topics.py` | Creates (optionally compacted), deletes and counts Kafka topics |
@@ -72,7 +72,7 @@ Both engines measure latency the same way. A sample starts at the newest `ingest
 
 ## Flink job
 
-Flink 2.2.1, Kafka connector 5.0.0-2.2, Java 17 bytecode (builds with JDK 17 or 21). `keyBy(symbol)` then a `KeyedProcessFunction`: a map of open windows per symbol, one event-time timer per window at `window_end - 1`, EMA state carried across windows, advisories on a side output, late ticks on another side output and the `lateTicks` metric. The window and EMA logic is in `EmaWindows`, shared with the `KeyedCoProcessFunction` used when control topics are given (see Metadata and subscriptions).
+Flink 2.2.1, Kafka connector 5.0.0-2.2, Java 17 bytecode (builds with JDK 17 or 21). `keyBy(symbol)` then a `KeyedProcessFunction`: a map of open windows per symbol, one event-time timer per window at `window_end - 1`, EMA state carried across windows, advisories on a side output, late ticks on another side output and the `lateTicks` metric. The window and EMA logic is in `EmaWindows`, shared with the `KeyedCoProcessFunction` used with `--subscriptions-topic`; both skip in-band metadata records or, with `--enrich`, keep them as versions (see Metadata and subscriptions).
 
 ```bash
 make flink-build                          # shaded jar in flink-job/target
@@ -212,24 +212,39 @@ ENGINE=flink P=2 SPEED=600 OOO=300 TICKS=<two-day dir> MAX_GAP_MS=36000000 HEART
 
 All runs give the reference's 5,016 advisories exactly. The rows of each of these windows are emitted within 4 ms of each other. 51 s at 600x is the 8.5 h from 22:30 to the first tick of 09.11 at 07:00. The overnight wait does not show in the latency from closable: without heartbeats those windows become closable only with the morning ticks, and both engines emit right after them. The Python engine keeps up with 600x on average (99,900 ticks/s) but not at the peaks; its 5.7 s on 08.11 22:25 and its p99 of 4.7-11.1 s are backlog. At 1 s the heartbeats add 1,142,448 records, 4.8% of the ticks. Per run: `out/heartbeat/<run>/` (`latency.json`, `diff.txt`, `evening.json`), all four in `out/heartbeat/summary.md`.
 
-## Metadata and subscriptions (Kafka mode)
+## Metadata and subscriptions
 
-Both are compacted topics read by the keyed operator next to the ticks:
+### Metadata, in-band
+
+A metadata row (empty system time in the raw feed) travels in the ticks topic at its position in the feed. `prep.py` writes every metadata row to `metadata_events.parquet` (`seq,symbol,isin,currency`, feed order). `replay.py --with-metadata` sends a row only when it changes the symbol's `isin` or `currency` (an empty field keeps the previous value), keyed and partitioned like the symbol's ticks:
+
+`symbol,M,0.0,<stamp>,<seq>,<ingest_ms>,<isin>,<currency>`
+
+`M` in the sec_type field marks the record (ticks carry `E` or `I`, heartbeats `H`). The stamp is the largest event time sent to the ticks topic before it, ticks and heartbeats (0 before the first). Metadata records never move event time: both engines leave them out of the watermark and the late check.
+
+With `--enrich` (Flink job, `engine.py` Kafka mode) an advisory line gets `isin,currency` after `prev_ema100`, before the latency columns: the latest metadata stamped before window end + out-of-orderness bound, which is what the feed had said about the symbol when the window could first close. A symbol with no metadata yet gets two empty fields. Each engine keeps the versions per symbol (Flink keyed `MapState`, Python a list) and drops the ones no later window can pick. The answer does not depend on timing: a window closes only after the symbol's partition has delivered a record with event time >= window end + bound, and every metadata record stamped below that comes before it in the same partition. Without `--enrich` the engines skip metadata records and the output is unchanged. Flink's file mode takes `--enrich` too and reads metadata lines in the same format when its CSV has them (the CSV copy `prep.py` writes has none).
+
+`reference.py --metadata-events FILE` computes the same two columns in batch: feed clock = running maximum event time of the admitted ticks, then an as-of join at window end + `--late-bound-ms`. `collect.py --enriched` keeps the columns and `diff.py` compares them when both sides have them; `bench.py --enrich` expects a topic preloaded with `--with-metadata`.
+
+An earlier version loaded the week's last value per symbol into a compacted `instruments` topic before the first tick, so Monday's advisories already knew Friday's metadata. Over the week no symbol's `isin` or `currency` ever changes, so `--with-metadata` sends 5,479 rows, one per symbol, and one advisory changes: ICAVE.FR's BUY at 10.11 07:20, whose first metadata row comes 281,157 lines after its first trade, now has empty fields. `metadata.parquet` (latest value per symbol) remains for the dashboard.
+
+Checked in `out/meta-check`: `reference.py --late-bound-ms 300 --metadata-events` gives the same 1,855,645 EMA rows and 11,349 advisories as `reference-300`, 22 of them without metadata (21 symbols that never have any, plus ICAVE.FR). The Flink job in file mode at p = 1, 2 and 4 with `--enrich`, on the week's CSVs with the metadata rows mixed in as `replay.py` sends them, equals it including `isin,currency` (5,506 late ticks, as before). The Python engine's Kafka loop with `--enrich`, fed by a stand-in for the Kafka client that delivers each of the 8 CRC32 partitions in 10,000-record chunks (so the partitions drift apart in event time) and with ticks quarantined at 1 h as `replay.py` does, equals `reference.py --quarantine-ms 3600000 --late-bound-ms 300 --metadata-events` on every row and both columns (`out/meta-check/fake_kafka_engine.py`). Through the broker (17.11): `replay.py --with-metadata --quarantine-ms 3600000` into `bench-week-qm` (59,386,164 ticks + 5,479 metadata rows, 5,506 ticks to the quarantine topic), then `bench.py --enrich --verify out/meta-check/reference-q-meta --python-baseline`: Flink at p = 1, 2, 4 and the Python engine each gave 1,855,645 EMA rows and 11,349 advisories identical to the reference including `isin,currency` (`out/meta-check/bench`).
+
+### Subscriptions
 
 | Topic | Key | Value | Written by |
 |---|---|---|---|
-| instruments | symbol | `exchange,sec_type,isin,currency,related_indices` | `replay.py --instruments-topic instruments` (rows of `metadata.parquet`, before the ticks; `--metadata` overrides the file) |
 | subscriptions | `subscriber\|symbol` | `subscribe`, `unsubscribe` or a tombstone | `trading/subscribers.py` |
 
-`python -m trading.topics create instruments subscriptions --compact` creates them; `replay.py` and `subscribers.py` create theirs compacted when missing.
+`python -m trading.topics create subscriptions --compact` creates it; `subscribers.py` creates it compacted when missing.
 
-The Flink job takes `--instruments-topic` and `--subscriptions-topic`. With either, one more Kafka source (parallelism 1) reads the control topics, `keyBy(symbol)`, and is connected to the keyed ticks in `ControlledEmaCrossoverFunction` (a `KeyedCoProcessFunction`). Keyed state per symbol: the latest instrument row, a map of subscribers, and the existing open windows and EMA state. The EMA is updated for every symbol at every window close; the row and its advisory are emitted only while the symbol has at least one subscriber (or, without `--subscriptions-topic`, as `--subscriptions FILE|all` says; giving both is an error). With `--instruments-topic` an advisory line gets `isin,currency` after `prev_ema100`, before the latency columns; a symbol without metadata gets two empty fields. Without either option the job graph and output are unchanged.
+The Flink job takes `--subscriptions-topic`. One more Kafka source (parallelism 1) reads it, `keyBy(symbol)`, and is connected to the keyed ticks in `ControlledEmaCrossoverFunction` (a `KeyedCoProcessFunction`). Keyed state per symbol: a map of subscribers, the open windows and EMA state, and with `--enrich` the metadata versions. The EMA is updated for every symbol at every window close; the row and its advisory are emitted only while the symbol has at least one subscriber (giving `--subscriptions FILE` as well is an error). Without the option the job graph and output are unchanged.
 
-Control records apply at processing time, from the next window close on. So that symbols subscribed before the job starts get every window, the control stream holds event time back until it has been read up to the end offsets the job saw at start (`ControlCatchUp` then emits a `Long.MAX_VALUE` watermark, so the control input never delays the ticks afterwards). With `--bounded` the control source stops at the end of its topics too.
+Subscription records apply at processing time, from the next window close on. So that symbols subscribed before the job starts get every window, the control stream holds event time back until it has been read up to the end offsets the job saw at start (`ControlCatchUp` then emits a `Long.MAX_VALUE` watermark, so the control input never delays the ticks afterwards). With `--bounded` the control source stops at the end of the topic too.
 
-The Python engine's Kafka mode takes `--instruments-topic` (it reads the compacted topic into a dict at start), and its advisory lines then have the same layout as Flink's. Dynamic subscriptions are Flink-only; the Python engine keeps the static `--subscriptions FILE`. File mode in both engines has neither option. `collect.py`, `latency.py` and `diff.py` read fixed leading columns plus the last two, so the extra advisory columns do not affect them.
+Dynamic subscriptions are Flink-only; the Python engine keeps the static `--subscriptions FILE`. `latency.py` skips metadata records; `collect.py` reads fixed leading columns plus the last two.
 
-Checked on the first 200,000 day-08 ticks replayed at 60x into an unbounded local job (p = 2), with subscriptions changed halfway: every emitted row equals the reference row with the same key; the four symbols subscribed throughout (one of them losing one of its two subscribers to a tombstone) got all 11 closable windows; the symbols unsubscribed or tombstoned halfway got windows 07:05-07:25 and then none; the symbol subscribed halfway got 07:30-07:55; a key without `|` was ignored; advisories carried `isin,currency`. On all of day 08, Flink p = 2 and the Python engine with `--instruments-topic` wrote the same 4,840 advisory lines up to float formatting, with identical `isin,currency` (21 symbols without metadata get empty fields), and their collected output equals `out/day08/reference`.
+Checked on the first 200,000 day-08 ticks replayed at 60x into an unbounded local job (p = 2), with subscriptions changed halfway: every emitted row equals the reference row with the same key; the four symbols subscribed throughout (one of them losing one of its two subscribers to a tombstone) got all 11 closable windows; the symbols unsubscribed or tombstoned halfway got windows 07:05-07:25 and then none; the symbol subscribed halfway got 07:30-07:55; a key without `|` was ignored.
 
 ## Subscriber fan-out
 
@@ -265,7 +280,7 @@ All off by default; without these switches the job graph and output are unchange
 | `--checkpoint-dir URI` | File-system checkpoint storage; without it the JobManager keeps checkpoints in memory. The Docker cluster mounts `./checkpoints` at `/opt/checkpoints` in both containers |
 | `--delivery none\|at-least-once\|exactly-once` | Delivery guarantee of both Kafka sinks; default `none` |
 
-`exactly-once` needs `--checkpoint-ms`. Each run gets the transactional id prefix `ema-crossover-<random UUID>-<topic>` (`--transactional-id-prefix` overrides it) and a transaction timeout of 10 minutes (`--transaction-timeout-ms`): the broker allows at most 15 minutes, and the connector's default of 1 hour is rejected. Rows become visible to `read_committed` consumers when the checkpoint after them completes. File mode rejects `--checkpoint-ms`. With `--instruments-topic` or `--subscriptions-topic`, checkpointing needs `--bounded`: `ControlCatchUp` is not part of the checkpoint, so after a restore of an unbounded job it would hold event time back until every control partition delivers a new record. Newest-ingest stamps (the latency columns) are not checkpointed either and restart from the next tick.
+`exactly-once` needs `--checkpoint-ms`. Each run gets the transactional id prefix `ema-crossover-<random UUID>-<topic>` (`--transactional-id-prefix` overrides it) and a transaction timeout of 10 minutes (`--transaction-timeout-ms`): the broker allows at most 15 minutes, and the connector's default of 1 hour is rejected. Rows become visible to `read_committed` consumers when the checkpoint after them completes. File mode rejects `--checkpoint-ms`. With `--subscriptions-topic`, checkpointing needs `--bounded`: `ControlCatchUp` is not part of the checkpoint, so after a restore of an unbounded job it would hold event time back until every control partition delivers a new record. Newest-ingest stamps (the latency columns) are not checkpointed either and restart from the next tick.
 
 The Python engine has no checkpointing.
 
@@ -314,4 +329,4 @@ Latency, `ENGINE=flink P=2 SPEED=300 LIMIT=60000 OOO=2000 RECEIVED=1` (`out/ft/l
 
 ## Switches
 
-`--out-of-orderness-ms`, `--suppress-first` and `--subscriptions FILE|all` work in `engine.py` and the Flink job; `reference.py` takes the last two, plus `--late-bound-ms N`, which drops exactly the events a stream with bound N drops (by default the reference keeps every event). `--empty-window skip|repeat` exists in `engine.py` and `reference.py` only; the Flink job implements `skip`. `--quarantine-ms N` works in `replay.py`, `engine.py` file mode and `reference.py`; `--instruments-topic` in `replay.py`, the Flink job and `engine.py` Kafka mode; `--subscriptions-topic` in the Flink job only; `--checkpoint-ms`, `--checkpoint-mode`, `--checkpoint-dir` and `--delivery` in the Flink job's Kafka mode only (see Fault tolerance); `--isolation` in `collect.py`, `latency.py` and `topics.py count`; `--heartbeat-ms`, `--heartbeat-margin-ms` and `--heartbeat-tail-ms` in `replay.py` (both engines' Kafka modes always recognise heartbeat records, see Heartbeats). Make variables: `OOO`, `SUBS`, `TICKS`, `META`, `SPEED`, `DAYS`, `QUARANTINE_MS`.
+`--out-of-orderness-ms`, `--suppress-first` and `--subscriptions FILE|all` work in `engine.py` and the Flink job; `reference.py` takes the last two, plus `--late-bound-ms N`, which drops exactly the events a stream with bound N drops (by default the reference keeps every event). `--empty-window skip|repeat` exists in `engine.py` and `reference.py` only; the Flink job implements `skip`. `--quarantine-ms N` works in `replay.py`, `engine.py` file mode and `reference.py`; `--with-metadata` and `--metadata-events FILE` in `replay.py`, `--enrich` in the Flink job and `engine.py` Kafka mode, `--metadata-events FILE` in `reference.py`, `--enriched` in `collect.py`; `--subscriptions-topic` in the Flink job only; `--checkpoint-ms`, `--checkpoint-mode`, `--checkpoint-dir` and `--delivery` in the Flink job's Kafka mode only (see Fault tolerance); `--isolation` in `collect.py`, `latency.py` and `topics.py count`; `--heartbeat-ms`, `--heartbeat-margin-ms` and `--heartbeat-tail-ms` in `replay.py` (both engines' Kafka modes always recognise heartbeat and metadata records, see Heartbeats and Metadata). Make variables: `OOO`, `SUBS`, `TICKS`, `META`, `SPEED`, `DAYS`, `QUARANTINE_MS`.

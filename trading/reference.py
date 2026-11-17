@@ -4,6 +4,7 @@ import time
 from pathlib import Path
 
 import duckdb
+import pyarrow as pa
 
 from trading.core import quarantine_sql
 from trading.files import ResultWriter, load_subscriptions, tick_files
@@ -35,6 +36,40 @@ def window_closes(con, files, window_ms, late_bound_ms=None, quarantine_ms=None)
         )
         SELECT symbol, window_start, last FROM ranked WHERE rn = 1 ORDER BY symbol, window_start
     """)
+
+
+def instruments_as_of(con, files, events, advisories, bound_ms, quarantine_ms=None):
+    file_list = "[" + ", ".join(f"'{f}'" for f in files) + "]"
+    admitted = "TRUE" if quarantine_ms is None else f"NOT {quarantine_sql(quarantine_ms)}"
+    con.execute(f"""
+        CREATE OR REPLACE TEMP TABLE stamped AS
+        WITH clock AS (
+            SELECT seq, max(event_ts) OVER (ORDER BY seq ROWS UNBOUNDED PRECEDING) AS clock
+            FROM read_parquet({file_list})
+            WHERE {admitted}
+        )
+        SELECT m.symbol, m.seq, coalesce(c.clock, 0) AS ts,
+               coalesce(m.isin, '') AS isin, coalesce(m.currency, '') AS currency
+        FROM read_parquet('{events}') m ASOF LEFT JOIN clock c ON m.seq > c.seq
+    """)
+    con.register("adv", pa.table({
+        "symbol": [a[0] for a in advisories],
+        "window_end": [a[1] for a in advisories],
+        "cutoff": [a[1] + bound_ms for a in advisories],
+    }))
+    found = {}
+    for field in ("isin", "currency"):
+        rows = con.execute(f"""
+            WITH versions AS (
+                SELECT symbol, ts, arg_max({field}, seq) AS value FROM stamped WHERE {field} <> '' GROUP BY symbol, ts
+            )
+            SELECT a.symbol, a.window_end, v.value
+            FROM adv a ASOF JOIN versions v ON a.symbol = v.symbol AND a.cutoff > v.ts
+        """).fetchall()
+        for symbol, window_end, value in rows:
+            found.setdefault((symbol, window_end), {})[field] = value
+    con.unregister("adv")
+    return {key: (values.get("isin", ""), values.get("currency", "")) for key, values in found.items()}
 
 
 def evaluate_symbol(symbol, windows, last_window, window_ms, empty_window, suppress_first):
@@ -79,6 +114,9 @@ def main(argv=None):
                         help="drop events a stream with this out-of-orderness bound would drop (default: keep all)")
     parser.add_argument("--quarantine-ms", type=int, default=None,
                         help="remove ticks whose sys_ts is more than N ms after event_ts before anything else")
+    parser.add_argument("--metadata-events",
+                        help="metadata rows parquet: add isin,currency to advisories as known when each window "
+                             "could first close (window end + --late-bound-ms on the feed clock), as engines' --enrich")
     args = parser.parse_args(argv)
 
     started = time.perf_counter()
@@ -120,11 +158,16 @@ def main(argv=None):
             windows.append((start, close))
     finish()
 
-    writer = ResultWriter(args.out)
+    instruments = None
+    if args.metadata_events:
+        instruments = instruments_as_of(con, files, args.metadata_events, all_advisories, args.late_bound_ms or 0,
+                                        args.quarantine_ms)
+        counts["advisories_without_metadata"] = sum((a[0], a[1]) not in instruments for a in all_advisories)
+    writer = ResultWriter(args.out, instruments is not None)
     for symbol, end, close, ema38, ema100 in sorted(all_rows, key=lambda r: (r[1], r[0])):
         writer.write_ema(symbol, end, close, ema38, ema100)
     for advisory in sorted(all_advisories, key=lambda r: (r[1], r[0])):
-        writer.write_advisory(*advisory)
+        writer.write_advisory(*advisory, instruments.get(advisory[:2]) if instruments is not None else None)
     writer.close()
     counts["seconds"] = round(time.perf_counter() - started, 3)
     Path(args.out, "metrics.json").write_text(json.dumps(counts, indent=2))

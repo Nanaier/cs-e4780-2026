@@ -22,13 +22,13 @@ public class ResultFiles implements SinkWriter<String> {
     private long advisories;
     private long lateTicks;
 
-    public ResultFiles(String outDir) throws IOException {
+    public ResultFiles(String outDir, boolean enriched) throws IOException {
         File dir = new File(outDir);
         Files.createDirectories(dir.toPath());
         emaFile = Files.newBufferedWriter(new File(dir, "ema.csv").toPath());
         advisoryFile = Files.newBufferedWriter(new File(dir, "advisories.csv").toPath());
         writeLine(emaFile, EMA_HEADER);
-        writeLine(advisoryFile, ADVISORY_HEADER);
+        writeLine(advisoryFile, enriched ? ADVISORY_HEADER + ",isin,currency" : ADVISORY_HEADER);
     }
 
     @Override

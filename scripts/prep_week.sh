@@ -37,6 +37,10 @@ duckdb.sql(f"""
         GROUP BY symbol ORDER BY symbol
     ) TO '{out}/metadata.parquet' (FORMAT parquet)
 """)
+duckdb.sql(f"""
+    COPY (SELECT * FROM read_parquet('{parts}/*/metadata_events.parquet') ORDER BY seq)
+    TO '{out}/metadata_events.parquet' (FORMAT parquet)
+""")
 EOF
 rm -rf "$parts"
 ls -la "$out/ticks"

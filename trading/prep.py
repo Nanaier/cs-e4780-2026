@@ -154,6 +154,10 @@ def write_metadata(con, out_dir):
             ORDER BY symbol
         ) TO '{out_dir / "metadata.parquet"}' (FORMAT parquet)
     """)
+    con.execute(f"""
+        COPY (SELECT seq, symbol, isin, currency FROM all_events ORDER BY seq)
+        TO '{out_dir / "metadata_events.parquet"}' (FORMAT parquet)
+    """)
 
 
 def main(argv=None):
@@ -172,6 +176,7 @@ def main(argv=None):
     con = duckdb.connect()
     con.execute(f"SET memory_limit = '{args.memory_limit}'")
     con.execute("CREATE TEMP TABLE all_metadata (line_no BIGINT, symbol VARCHAR, exchange VARCHAR, sec_type VARCHAR, isin VARCHAR, currency VARCHAR, related_indices VARCHAR)")
+    con.execute("CREATE TEMP TABLE all_events (seq BIGINT, symbol VARCHAR, isin VARCHAR, currency VARCHAR)")
 
     summary = []
     for index, raw in enumerate(args.inputs, start=args.first_index):
@@ -184,6 +189,10 @@ def main(argv=None):
             INSERT INTO all_metadata
             SELECT {index} * {SEQ_STRIDE} + line_no, symbol, exchange, sec_type, isin, currency, related_indices
             FROM classified WHERE isin <> '' OR currency <> '' OR related_indices <> ''
+        """)
+        con.execute(f"""
+            INSERT INTO all_events
+            SELECT {index} * {SEQ_STRIDE} + line_no, symbol, isin, currency FROM classified WHERE kind = 'metadata'
         """)
         con.execute(f"""
             COPY (SELECT seq, symbol, exchange, sec_type, last, event_ts, sys_ts FROM ticks WHERE event_ts IS NOT NULL ORDER BY seq)

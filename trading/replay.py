@@ -5,8 +5,8 @@ import pyarrow.parquet as pq
 from confluent_kafka import Producer
 from confluent_kafka.admin import AdminClient, NewTopic
 
-from trading.core import HEARTBEAT, quarantined
-from trading.files import default_metadata, metadata_values, tick_files
+from trading.core import HEARTBEAT, METADATA, quarantined
+from trading.files import default_metadata_events, metadata_changes, tick_files
 
 
 def ensure_topic(bootstrap, topic, partitions, config=None):
@@ -76,13 +76,22 @@ class Heartbeat:
             self.emit(clock)
 
 
-def publish_instruments(producer, topic, metadata):
-    sent = 0
-    for symbol, value in metadata_values(metadata):
-        produce(producer, topic, symbol, value)
-        sent += 1
-    producer.flush()
-    return sent
+class MetadataFeed:
+    def __init__(self, producer, topic, path, partition_of):
+        self.producer = producer
+        self.topic = topic
+        self.partition_of = partition_of
+        self.changes = metadata_changes(path)
+        self.pending = next(self.changes, None)
+        self.sent = 0
+
+    def until(self, seq, clock):
+        while self.pending is not None and (seq is None or self.pending[0] < seq):
+            row_seq, symbol, isin, currency = self.pending
+            value = f"{symbol},{METADATA},0.0,{clock},{row_seq},{int(time.time() * 1000)},{isin},{currency}"
+            produce(self.producer, self.topic, symbol, value, self.partition_of.get(symbol))
+            self.sent += 1
+            self.pending = next(self.changes, None)
 
 
 def main(argv=None):
@@ -97,8 +106,11 @@ def main(argv=None):
     parser.add_argument("--quarantine-ms", type=int, default=None,
                         help="route ticks whose sys_ts is more than N ms after event_ts to --quarantine-topic")
     parser.add_argument("--quarantine-topic", default="quarantine")
-    parser.add_argument("--instruments-topic", help="publish metadata rows keyed by symbol here before the ticks")
-    parser.add_argument("--metadata", help="metadata parquet (default: metadata.parquet next to the ticks directory)")
+    parser.add_argument("--with-metadata", action="store_true",
+                        help="send each metadata row that changes a symbol's isin or currency into the ticks topic at "
+                             "its position in the feed, stamped with the largest event time sent so far")
+    parser.add_argument("--metadata-events",
+                        help="metadata rows parquet (default: metadata_events.parquet next to the ticks directory)")
     parser.add_argument("--partition-map", help="CSV symbol,partition; symbols not listed keep the CRC32 partitioner")
     parser.add_argument("--heartbeat-ms", type=int, default=0,
                         help="send a heartbeat to every partition each time the feed clock (largest sys_ts so far) "
@@ -114,8 +126,8 @@ def main(argv=None):
     ensure_topic(args.bootstrap, args.topic, args.partitions)
     if args.quarantine_ms is not None:
         ensure_topic(args.bootstrap, args.quarantine_topic, args.partitions)
-    if args.instruments_topic:
-        ensure_topic(args.bootstrap, args.instruments_topic, args.partitions, {"cleanup.policy": "compact"})
+    if args.metadata_events and not args.with_metadata:
+        parser.error("--metadata-events needs --with-metadata")
     producer = Producer({
         "bootstrap.servers": args.bootstrap,
         "linger.ms": 5,
@@ -125,16 +137,20 @@ def main(argv=None):
         "queue.buffering.max.messages": 1_000_000,
     })
 
-    if args.instruments_topic:
-        metadata = args.metadata or default_metadata(args.ticks)
-        print(f"instruments: {publish_instruments(producer, args.instruments_topic, metadata)} rows from {metadata} "
-              f"to {args.instruments_topic}", flush=True)
-
+    metadata_path = (args.metadata_events or default_metadata_events(args.ticks)) if args.with_metadata else None
+    meta = MetadataFeed(producer, args.topic, metadata_path, partition_of) if metadata_path else None
     beat = Heartbeat(producer, args.topic, args.heartbeat_ms, args.heartbeat_margin_ms) if args.heartbeat_ms else None
     sent = held = 0
     started = time.time()
     virtual_ms = 0.0
     previous_ts = first_ts = None
+    sent_clock = 0
+
+    def clock():
+        if beat and beat.clock is not None:
+            return max(sent_clock, beat.clock - beat.margin_ms)
+        return sent_clock
+
     for path in tick_files(args.ticks):
         for batch in pq.ParquetFile(path).iter_batches(batch_size=65_536, columns=["symbol", "sec_type", "last", "event_ts", "seq", "sys_ts"]):
             cols = batch.to_pydict()
@@ -154,12 +170,15 @@ def main(argv=None):
                     previous_ts = first_ts = arrival
                 else:
                     previous_ts = max(previous_ts, arrival)
+                if meta:
+                    meta.until(seq, clock())
                 value = f"{symbol},{sec_type},{last!r},{event_ts},{seq},{int(time.time() * 1000)}"
                 if args.quarantine_ms is not None and quarantined(event_ts, sys_ts, args.quarantine_ms):
                     produce(producer, args.quarantine_topic, symbol, f"{value},{sys_ts}")
                     held += 1
                 else:
                     produce(producer, args.topic, symbol, value, partition_of.get(symbol))
+                    sent_clock = max(sent_clock, event_ts)
                 if beat:
                     beat.advance(previous_ts)
                 sent += 1
@@ -170,6 +189,8 @@ def main(argv=None):
                     break
             if args.limit and sent >= args.limit:
                 break
+    if meta and not (args.limit and sent >= args.limit):
+        meta.until(None, clock())
     if beat and args.heartbeat_tail_ms and previous_ts is not None:
         beat.until(previous_ts + args.heartbeat_tail_ms, previous_ts, virtual_ms, started, args.speed)
     producer.flush()
@@ -179,6 +200,8 @@ def main(argv=None):
     if beat:
         print(f"heartbeats: {beat.sent} to each of {len(beat.partitions)} partitions, "
               f"last event time {beat.clock - beat.margin_ms}")
+    if meta:
+        print(f"metadata: {meta.sent} rows in-band from {metadata_path}")
     if args.quarantine_ms is not None:
         print(f"routed: {args.topic}={sent - held} {args.quarantine_topic}={held}")
     print(f"done: {sent} events in {elapsed:.1f} s ({sent / elapsed:,.0f}/s)")

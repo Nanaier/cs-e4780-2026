@@ -21,6 +21,7 @@ def main(argv=None):
                         help="isolation.level; read_committed is librdkafka's default")
     parser.add_argument("--dedupe", action="store_true",
                         help="keep the first row per (topic, symbol, window_end) and count the dropped duplicates")
+    parser.add_argument("--enriched", action="store_true", help="advisory lines carry isin,currency (engines' --enrich)")
     args = parser.parse_args(argv)
 
     consumer = Consumer({
@@ -31,7 +32,8 @@ def main(argv=None):
         "isolation.level": args.isolation,
     })
     consumer.subscribe([args.ema_topic, args.advisories_topic])
-    writer = ResultWriter(args.out)
+    writer = ResultWriter(args.out, args.enriched)
+    advisory_end = 10 if args.enriched else 8
     end_to_end, in_job = [], []
     counts = {"ema": 0, "advisories": 0}
     kept = {"ema": {}, "advisories": {}}
@@ -56,7 +58,7 @@ def main(argv=None):
                 f = message.value().decode().split(",")
                 kind = "ema" if message.topic() == args.ema_topic else "advisories"
                 if args.dedupe:
-                    key, values = f"{f[0]},{f[1]}", ",".join(f[3:6] if kind == "ema" else f[3:8])
+                    key, values = f"{f[0]},{f[1]}", ",".join(f[3:6] if kind == "ema" else f[3:advisory_end])
                     first = kept[kind].setdefault(key, values)
                     if first is not values:
                         duplicates[kind] += 1
@@ -73,7 +75,8 @@ def main(argv=None):
                     writer.write_ema(f[0], int(f[1]), float(f[3]), float(f[4]), float(f[5]))
                 else:
                     counts["advisories"] += 1
-                    writer.write_advisory(f[0], int(f[1]), f[3], float(f[4]), float(f[5]), float(f[6]), float(f[7]))
+                    writer.write_advisory(f[0], int(f[1]), f[3], float(f[4]), float(f[5]), float(f[6]), float(f[7]),
+                                          f[8:10] if args.enriched else None)
     finally:
         consumer.close()
         writer.close()

@@ -19,7 +19,7 @@ import pyarrow.parquet as pq
 
 from trading import topics
 from trading.core import quarantine_sql
-from trading.files import tick_files
+from trading.files import default_metadata_events, metadata_changes, tick_files
 
 ROOT = Path(__file__).resolve().parents[1]
 COMPOSE = ["docker", "compose", "-f", "docker-compose.yml", "-f", "docker-compose.flink.yml"]
@@ -68,6 +68,8 @@ def preflight(args):
         expected = sum(pq.ParquetFile(f).metadata.num_rows for f in tick_files(args.ticks))
     else:
         sys.exit("give --ticks or --expected so the topic size can be checked")
+    if args.enrich and args.expected is None:
+        expected += sum(1 for _ in metadata_changes(default_metadata_events(args.ticks)))
     found = topics.count(args.bootstrap, args.topic)
     if found != expected:
         sys.exit(f"topic {args.topic} holds {found} messages, expected {expected} (make bench-preload)")
@@ -125,9 +127,10 @@ def stop_cluster():
 
 def control_args(args):
     extra = []
-    for flag, topic in (("--instruments-topic", args.instruments_topic), ("--subscriptions-topic", args.subscriptions_topic)):
-        if topic:
-            extra += [flag, topic]
+    if args.subscriptions_topic:
+        extra += ["--subscriptions-topic", args.subscriptions_topic]
+    if args.enrich:
+        extra.append("--enrich")
     return extra
 
 
@@ -294,6 +297,7 @@ def subtask_shares(args, jid, vertex, field):
 def verify(args, ema_topic, adv_topic):
     work = Path(tempfile.mkdtemp(prefix="verify-", dir=args.run_dir))
     extra = (["--isolation", args.isolation] if args.isolation else []) + (["--dedupe"] if args.dedupe else [])
+    extra += ["--enriched"] if args.enrich else []
     try:
         sh(sys.executable, "-m", "trading.collect", "--bootstrap", args.bootstrap, "--from-start",
            "--ema-topic", ema_topic, "--advisories-topic", adv_topic, "--out", str(work), *extra)
@@ -459,7 +463,7 @@ def run_python(args, records):
     cpu.start()
     started = time.time()
     try:
-        extra = ["--instruments-topic", args.instruments_topic] if args.instruments_topic else []
+        extra = ["--enrich"] if args.enrich else []
         sh(sys.executable, "-m", "trading.engine", "--kafka", args.bootstrap, "--topic", args.topic,
            "--group", f"bench-{tag}", "--out", str(work), "--out-of-orderness-ms", str(args.ooo_ms),
            "--idle-partition-ms", "86400000", "--idle-exit-s", "10", "--ema-topic", ema_topic,
@@ -608,7 +612,8 @@ def main(argv=None):
     parser.add_argument("--verify-runs", type=int, default=1_000_000, help="verify only the first N runs of each p")
     parser.add_argument("--python-baseline", action="store_true")
     parser.add_argument("--quarantine-ms", type=int, help="the topic was preloaded with replay --quarantine-ms N")
-    parser.add_argument("--instruments-topic", help="pass this compacted metadata topic to the engines")
+    parser.add_argument("--enrich", action="store_true",
+                        help="the topic was preloaded with replay --with-metadata; pass --enrich to the engines")
     parser.add_argument("--subscriptions-topic", help="pass this compacted subscriptions topic to the Flink job")
     parser.add_argument("--gateway", action="store_true", help="run trading.gateway on each Flink run's outputs")
     parser.add_argument("--gateway-sample", type=int, default=3, help="subscribers whose deliveries the gateway writes to files")

@@ -16,19 +16,32 @@ public class EmaCrossoverFunction extends KeyedProcessFunction<String, Tick, Str
 
     private final Set<String> subscribedSymbols;
     private final EmaWindows windows;
+    private final boolean enrich;
+    private final long boundMs;
+    private final InstrumentVersions instruments = new InstrumentVersions();
 
-    public EmaCrossoverFunction(Set<String> subscribedSymbols, boolean suppressFirst, boolean latencyColumns) {
+    public EmaCrossoverFunction(Set<String> subscribedSymbols, boolean suppressFirst, boolean latencyColumns,
+                                boolean enrich, long boundMs) {
         this.subscribedSymbols = subscribedSymbols;
         this.windows = new EmaWindows(suppressFirst, latencyColumns);
+        this.enrich = enrich;
+        this.boundMs = boundMs;
     }
 
     @Override
     public void open(OpenContext openContext) {
         windows.open(getRuntimeContext());
+        instruments.open(getRuntimeContext());
     }
 
     @Override
     public void processElement(Tick tick, Context ctx, Collector<String> out) throws Exception {
+        if (tick.metadata()) {
+            if (enrich) {
+                instruments.add(tick);
+            }
+            return;
+        }
         if (!windows.add(tick, ctx.timerService())) {
             ctx.output(LATE_TICKS, tick);
         }
@@ -38,6 +51,7 @@ public class EmaCrossoverFunction extends KeyedProcessFunction<String, Tick, Str
     public void onTimer(long timestamp, OnTimerContext ctx, Collector<String> out) throws Exception {
         String symbol = ctx.getCurrentKey();
         boolean watched = subscribedSymbols == null || subscribedSymbols.contains(symbol);
-        windows.close(timestamp, symbol, watched, null, out, line -> ctx.output(ADVISORIES, line));
+        windows.close(timestamp, symbol, watched, enrich ? instruments.asOf(timestamp + 1 + boundMs) : null, out,
+                line -> ctx.output(ADVISORIES, line));
     }
 }
