@@ -1,0 +1,4 @@
+engine,p,run,records,rps_job,rps_source,rps_steady,rps_meter_median,job_s,speedup_job,efficiency_job,speedup_source,efficiency_source,speedup_steady,efficiency_steady,busiest_vertex,busiest_busy_ms,busiest_busy_max_ms,source_backpressure_ms,source_busiest_share,keyed_busiest_share,cpu_broker,cpu_jobmanager,cpu_taskmanager
+flink,1,1,59386164,1201565,1211691,1323816,430193,49.42,0.886,0.886,0.885,0.885,0.922,0.922,Source: tick-topic -> drop-heartbeats,889.3,889.3,22.8,1.0,1.0,3.8,4.2,91.4
+flink,1,2,59386164,1360695,1373535,1435340,397616,43.64,1.004,1.004,1.003,1.003,1.0,1.0,Source: tick-topic -> drop-heartbeats,826.0,826.0,84.9,1.0,1.0,4.0,4.2,91.8
+flink,1,3,59386164,1355725,1368755,1507620,372160,43.8,1.0,1.0,1.0,1.0,1.05,1.05,Source: tick-topic -> drop-heartbeats,835.3,835.3,75.3,1.0,1.0,4.0,4.2,91.7

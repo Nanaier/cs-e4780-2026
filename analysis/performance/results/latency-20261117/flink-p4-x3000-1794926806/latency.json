@@ -1,0 +1,60 @@
+{
+  "params": {
+    "ticks_topic": "lat-ticks-1794926806",
+    "results_topic": "lat-ema-1794926806",
+    "bound_ms": 300,
+    "hot_symbols": 100,
+    "isolation": "read_committed"
+  },
+  "ticks": 11794520,
+  "partitions": 8,
+  "empty_partitions": [],
+  "counts": {
+    "rows": 373029,
+    "never_closable": 0,
+    "emitted_before_closable": 0
+  },
+  "windows": 185,
+  "latency_ms_from_closable": {
+    "p50": 136,
+    "p95": 213,
+    "p99": 224,
+    "p99.9": 241,
+    "max": 261
+  },
+  "latency_ms_from_closable_hot": {
+    "p50": 137,
+    "p95": 213,
+    "p99": 222,
+    "p99.9": 229,
+    "max": 261
+  },
+  "latency_ms_from_closable_tail": {
+    "p50": 135,
+    "p95": 213,
+    "p99": 224,
+    "p99.9": 241,
+    "max": 261
+  },
+  "window_complete_ms": {
+    "p50": 140,
+    "p95": 221,
+    "p99": 241,
+    "p99.9": 261,
+    "max": 261
+  },
+  "window_emit_spread_ms": {
+    "p50": 8,
+    "p95": 24,
+    "p99": 32,
+    "p99.9": 80,
+    "max": 80
+  },
+  "latency_ms_engine_stamp": {
+    "p50": 7,
+    "p95": 16,
+    "p99": 98,
+    "p99.9": 99,
+    "max": 110
+  }
+}

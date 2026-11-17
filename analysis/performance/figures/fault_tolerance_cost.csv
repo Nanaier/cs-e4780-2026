@@ -1,0 +1,7 @@
+delivery,p,median_ticks_per_s_source
+none,2,2142745
+none,4,4074802
+at-least-once,2,2066324
+at-least-once,4,3983243
+exactly-once,2,2037052
+exactly-once,4,3607031

@@ -1,0 +1,1573 @@
+{
+ "engine": "flink",
+ "p": 4,
+ "run": 2,
+ "topic": "bench-week-q-bal",
+ "records": 59386164,
+ "ooo_ms": 300,
+ "cpusets": {
+  "broker": "4-5",
+  "jobmanager": "4-5",
+  "taskmanager": "0-3"
+ },
+ "job_id": "22a3ae8dc95eb5d036587fb71aa208a6",
+ "state": "FINISHED",
+ "job_ms": 13185,
+ "job_timestamps": {
+  "CANCELLING": 0,
+  "FAILING": 0,
+  "CANCELED": 0,
+  "FINISHED": 1794927668828,
+  "CREATED": 1794927655799,
+  "RESTARTING": 0,
+  "SUSPENDED": 0,
+  "INITIALIZING": 1794927655643,
+  "RECONCILING": 0,
+  "FAILED": 0,
+  "RUNNING": 1794927655844
+ },
+ "vertices": [
+  {
+   "name": "Source: tick-topic -> drop-heartbeats",
+   "parallelism": 4,
+   "duration_ms": 12811,
+   "busy_ms_per_s": {
+    "avg": 883.1,
+    "max": 1001.8
+   },
+   "backpressure_ms_per_s": {
+    "avg": -52.8,
+    "max": 58.6
+   },
+   "idle_ms_per_s": {
+    "avg": 169.6,
+    "max": 179.3
+   },
+   "busyTimeMsPerSecond_gauge": {
+    "avg": 875.2,
+    "max": 887.7
+   },
+   "backPressuredTimeMsPerSecond_gauge": {
+    "avg": 35.5,
+    "max": 43.8
+   },
+   "idleTimeMsPerSecond_gauge": {
+    "avg": 89.4,
+    "max": 92.0
+   }
+  },
+  {
+   "name": "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)",
+   "parallelism": 4,
+   "duration_ms": 12817,
+   "busy_ms_per_s": {
+    "avg": 582.3,
+    "max": 620.8
+   },
+   "backpressure_ms_per_s": {
+    "avg": 0.0,
+    "max": 0.0
+   },
+   "idle_ms_per_s": {
+    "avg": 417.7,
+    "max": 454.5
+   },
+   "busyTimeMsPerSecond_gauge": {
+    "avg": 807.2,
+    "max": 821.1
+   },
+   "backPressuredTimeMsPerSecond_gauge": {
+    "avg": 0.0,
+    "max": 0.0
+   },
+   "idleTimeMsPerSecond_gauge": {
+    "avg": 192.8,
+    "max": 207.5
+   }
+  }
+ ],
+ "throughput": {
+  "records_per_s_job": 4504070,
+  "records_per_s_source": 4635560,
+  "records_per_s_steady": 6750963,
+  "records_per_s_meter_median": 0
+ },
+ "steady_window": {
+  "share": 0.8,
+  "samples": 11,
+  "source_seconds": 12.2
+ },
+ "source_split": {
+  "records": [
+   14770902,
+   14852741,
+   14898300,
+   14864221
+  ],
+  "busiest_share": 0.2509
+ },
+ "keyed_split": {
+  "records": [
+   14185641,
+   15030141,
+   16328663,
+   13841719
+  ],
+  "busiest_share": 0.275
+ },
+ "cpu_percent_mean": {
+  "broker": 11.8,
+  "jobmanager": 8.7,
+  "taskmanager": 331.7
+ },
+ "outputs": {
+  "ema": 1855645,
+  "advisories": 11349
+ },
+ "samples": [
+  {
+   "t": 1794927655.9015944,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927656.9017344,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927657.902037,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927658.902258,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 346.0,
+       "accumulateBackPressuredTimeMs": 203.0,
+       "accumulateBusyTimeMs": 1180.0,
+       "numRecordsOut": 502929.0
+      },
+      {
+       "accumulateIdleTimeMs": 338.0,
+       "accumulateBackPressuredTimeMs": 211.0,
+       "accumulateBusyTimeMs": 1181.0,
+       "numRecordsOut": 490381.0
+      },
+      {
+       "accumulateIdleTimeMs": 415.0,
+       "accumulateBackPressuredTimeMs": 307.0,
+       "accumulateBusyTimeMs": 1996.0,
+       "numRecordsOut": 1422124.0
+      },
+      {
+       "accumulateIdleTimeMs": 460.0,
+       "accumulateBackPressuredTimeMs": 300.0,
+       "accumulateBusyTimeMs": 1958.0,
+       "numRecordsOut": 1346918.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 883.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1714.0,
+       "numRecordsOut": 36979.0
+      },
+      {
+       "accumulateIdleTimeMs": 897.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1695.0,
+       "numRecordsOut": 35877.0
+      },
+      {
+       "accumulateIdleTimeMs": 819.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1779.0,
+       "numRecordsOut": 37816.0
+      },
+      {
+       "accumulateIdleTimeMs": 944.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1656.0,
+       "numRecordsOut": 35465.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927659.9026246,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 448.0,
+       "accumulateBackPressuredTimeMs": 316.0,
+       "accumulateBusyTimeMs": 1954.0,
+       "numRecordsOut": 1419793.0
+      },
+      {
+       "accumulateIdleTimeMs": 453.0,
+       "accumulateBackPressuredTimeMs": 307.0,
+       "accumulateBusyTimeMs": 1958.0,
+       "numRecordsOut": 1222934.0
+      },
+      {
+       "accumulateIdleTimeMs": 415.0,
+       "accumulateBackPressuredTimeMs": 307.0,
+       "accumulateBusyTimeMs": 1996.0,
+       "numRecordsOut": 1422124.0
+      },
+      {
+       "accumulateIdleTimeMs": 460.0,
+       "accumulateBackPressuredTimeMs": 300.0,
+       "accumulateBusyTimeMs": 1958.0,
+       "numRecordsOut": 1346918.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 883.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1714.0,
+       "numRecordsOut": 36979.0
+      },
+      {
+       "accumulateIdleTimeMs": 897.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1695.0,
+       "numRecordsOut": 35877.0
+      },
+      {
+       "accumulateIdleTimeMs": 819.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1779.0,
+       "numRecordsOut": 37816.0
+      },
+      {
+       "accumulateIdleTimeMs": 944.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 1656.0,
+       "numRecordsOut": 35465.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927660.9027278,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 632.0,
+       "accumulateBackPressuredTimeMs": 350.0,
+       "accumulateBusyTimeMs": 2732.0,
+       "numRecordsOut": 2281014.0
+      },
+      {
+       "accumulateIdleTimeMs": 607.0,
+       "accumulateBackPressuredTimeMs": 343.0,
+       "accumulateBusyTimeMs": 2764.0,
+       "numRecordsOut": 2027795.0
+      },
+      {
+       "accumulateIdleTimeMs": 536.0,
+       "accumulateBackPressuredTimeMs": 345.0,
+       "accumulateBusyTimeMs": 2833.0,
+       "numRecordsOut": 2365669.0
+      },
+      {
+       "accumulateIdleTimeMs": 610.0,
+       "accumulateBackPressuredTimeMs": 339.0,
+       "accumulateBusyTimeMs": 2764.0,
+       "numRecordsOut": 2187203.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1389.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2202.0,
+       "numRecordsOut": 60948.0
+      },
+      {
+       "accumulateIdleTimeMs": 1352.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2236.0,
+       "numRecordsOut": 59074.0
+      },
+      {
+       "accumulateIdleTimeMs": 1271.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2321.0,
+       "numRecordsOut": 62084.0
+      },
+      {
+       "accumulateIdleTimeMs": 1399.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2194.0,
+       "numRecordsOut": 58437.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927661.9030519,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 797.0,
+       "accumulateBackPressuredTimeMs": 430.0,
+       "accumulateBusyTimeMs": 3494.0,
+       "numRecordsOut": 3223617.0
+      },
+      {
+       "accumulateIdleTimeMs": 782.0,
+       "accumulateBackPressuredTimeMs": 418.0,
+       "accumulateBusyTimeMs": 3521.0,
+       "numRecordsOut": 3015501.0
+      },
+      {
+       "accumulateIdleTimeMs": 713.0,
+       "accumulateBackPressuredTimeMs": 406.0,
+       "accumulateBusyTimeMs": 3602.0,
+       "numRecordsOut": 3254785.0
+      },
+      {
+       "accumulateIdleTimeMs": 765.0,
+       "accumulateBackPressuredTimeMs": 419.0,
+       "accumulateBusyTimeMs": 3536.0,
+       "numRecordsOut": 3147094.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1804.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2794.0,
+       "numRecordsOut": 92795.0
+      },
+      {
+       "accumulateIdleTimeMs": 1698.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2897.0,
+       "numRecordsOut": 90280.0
+      },
+      {
+       "accumulateIdleTimeMs": 1662.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2937.0,
+       "numRecordsOut": 94618.0
+      },
+      {
+       "accumulateIdleTimeMs": 1835.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 2765.0,
+       "numRecordsOut": 89081.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927662.9031632,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 966.0,
+       "accumulateBackPressuredTimeMs": 496.0,
+       "accumulateBusyTimeMs": 4254.0,
+       "numRecordsOut": 4277067.0
+      },
+      {
+       "accumulateIdleTimeMs": 905.0,
+       "accumulateBackPressuredTimeMs": 482.0,
+       "accumulateBusyTimeMs": 4328.0,
+       "numRecordsOut": 4171107.0
+      },
+      {
+       "accumulateIdleTimeMs": 854.0,
+       "accumulateBackPressuredTimeMs": 474.0,
+       "accumulateBusyTimeMs": 4387.0,
+       "numRecordsOut": 4360512.0
+      },
+      {
+       "accumulateIdleTimeMs": 928.0,
+       "accumulateBackPressuredTimeMs": 489.0,
+       "accumulateBusyTimeMs": 4298.0,
+       "numRecordsOut": 4220412.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 2163.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 3430.0,
+       "numRecordsOut": 130164.0
+      },
+      {
+       "accumulateIdleTimeMs": 2032.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 3557.0,
+       "numRecordsOut": 126740.0
+      },
+      {
+       "accumulateIdleTimeMs": 2002.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 3592.0,
+       "numRecordsOut": 133285.0
+      },
+      {
+       "accumulateIdleTimeMs": 2284.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 3310.0,
+       "numRecordsOut": 125193.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927662.1463172,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1069.0,
+       "accumulateBackPressuredTimeMs": 547.0,
+       "accumulateBusyTimeMs": 5110.0,
+       "numRecordsOut": 5551169.0
+      },
+      {
+       "accumulateIdleTimeMs": 1047.0,
+       "accumulateBackPressuredTimeMs": 519.0,
+       "accumulateBusyTimeMs": 5160.0,
+       "numRecordsOut": 5420426.0
+      },
+      {
+       "accumulateIdleTimeMs": 985.0,
+       "accumulateBackPressuredTimeMs": 504.0,
+       "accumulateBusyTimeMs": 5238.0,
+       "numRecordsOut": 5535941.0
+      },
+      {
+       "accumulateIdleTimeMs": 1075.0,
+       "accumulateBackPressuredTimeMs": 527.0,
+       "accumulateBusyTimeMs": 5121.0,
+       "numRecordsOut": 5476464.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 2532.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4071.0,
+       "numRecordsOut": 168023.0
+      },
+      {
+       "accumulateIdleTimeMs": 2376.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4223.0,
+       "numRecordsOut": 163408.0
+      },
+      {
+       "accumulateIdleTimeMs": 2306.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4297.0,
+       "numRecordsOut": 171866.0
+      },
+      {
+       "accumulateIdleTimeMs": 2653.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 3951.0,
+       "numRecordsOut": 161627.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927663.14647,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1069.0,
+       "accumulateBackPressuredTimeMs": 547.0,
+       "accumulateBusyTimeMs": 5110.0,
+       "numRecordsOut": 5551169.0
+      },
+      {
+       "accumulateIdleTimeMs": 1047.0,
+       "accumulateBackPressuredTimeMs": 519.0,
+       "accumulateBusyTimeMs": 5160.0,
+       "numRecordsOut": 5420426.0
+      },
+      {
+       "accumulateIdleTimeMs": 985.0,
+       "accumulateBackPressuredTimeMs": 504.0,
+       "accumulateBusyTimeMs": 5238.0,
+       "numRecordsOut": 5535941.0
+      },
+      {
+       "accumulateIdleTimeMs": 1075.0,
+       "accumulateBackPressuredTimeMs": 527.0,
+       "accumulateBusyTimeMs": 5121.0,
+       "numRecordsOut": 5476464.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 2532.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4071.0,
+       "numRecordsOut": 168023.0
+      },
+      {
+       "accumulateIdleTimeMs": 2376.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4223.0,
+       "numRecordsOut": 163408.0
+      },
+      {
+       "accumulateIdleTimeMs": 2306.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4297.0,
+       "numRecordsOut": 171866.0
+      },
+      {
+       "accumulateIdleTimeMs": 2653.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 3951.0,
+       "numRecordsOut": 161627.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927664.1466126,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1069.0,
+       "accumulateBackPressuredTimeMs": 547.0,
+       "accumulateBusyTimeMs": 5110.0,
+       "numRecordsOut": 5551169.0
+      },
+      {
+       "accumulateIdleTimeMs": 1047.0,
+       "accumulateBackPressuredTimeMs": 519.0,
+       "accumulateBusyTimeMs": 5160.0,
+       "numRecordsOut": 5420426.0
+      },
+      {
+       "accumulateIdleTimeMs": 985.0,
+       "accumulateBackPressuredTimeMs": 504.0,
+       "accumulateBusyTimeMs": 5238.0,
+       "numRecordsOut": 5535941.0
+      },
+      {
+       "accumulateIdleTimeMs": 1075.0,
+       "accumulateBackPressuredTimeMs": 527.0,
+       "accumulateBusyTimeMs": 5121.0,
+       "numRecordsOut": 5476464.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 1000.0,
+      "max": 1000.0,
+      "sum": 4000.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 2532.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4071.0,
+       "numRecordsOut": 168023.0
+      },
+      {
+       "accumulateIdleTimeMs": 2376.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4223.0,
+       "numRecordsOut": 163408.0
+      },
+      {
+       "accumulateIdleTimeMs": 2306.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4297.0,
+       "numRecordsOut": 171866.0
+      },
+      {
+       "accumulateIdleTimeMs": 2653.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 3951.0,
+       "numRecordsOut": 161627.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927665.1467671,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 681.75,
+      "max": 697.0,
+      "sum": 2727.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 105.75,
+      "max": 110.0,
+      "sum": 423.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 212.5,
+      "max": 218.0,
+      "sum": 850.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 94889.47083333333,
+      "max": 95589.81666666667,
+      "sum": 379557.8833333333
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1467.0,
+       "accumulateBackPressuredTimeMs": 695.0,
+       "accumulateBusyTimeMs": 5802.0,
+       "numRecordsOut": 9293965.0
+      },
+      {
+       "accumulateIdleTimeMs": 1441.0,
+       "accumulateBackPressuredTimeMs": 640.0,
+       "accumulateBusyTimeMs": 5883.0,
+       "numRecordsOut": 9304204.0
+      },
+      {
+       "accumulateIdleTimeMs": 1329.0,
+       "accumulateBackPressuredTimeMs": -1118.0,
+       "accumulateBusyTimeMs": 7753.0,
+       "numRecordsOut": 9474540.0
+      },
+      {
+       "accumulateIdleTimeMs": 1486.0,
+       "accumulateBackPressuredTimeMs": -1081.0,
+       "accumulateBusyTimeMs": 7558.0,
+       "numRecordsOut": 9299651.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 496.75,
+      "max": 531.0,
+      "sum": 1987.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 503.25,
+      "max": 542.0,
+      "sum": 2013.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 2901.8875000000003,
+      "max": 2999.9333333333334,
+      "sum": 11607.550000000001
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 3595.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4246.0,
+       "numRecordsOut": 294113.0
+      },
+      {
+       "accumulateIdleTimeMs": 3371.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4467.0,
+       "numRecordsOut": 286562.0
+      },
+      {
+       "accumulateIdleTimeMs": 3223.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4618.0,
+       "numRecordsOut": 301722.0
+      },
+      {
+       "accumulateIdleTimeMs": 3722.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4121.0,
+       "numRecordsOut": 283240.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927666.1469433,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 681.75,
+      "max": 697.0,
+      "sum": 2727.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 105.75,
+      "max": 110.0,
+      "sum": 423.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 212.5,
+      "max": 218.0,
+      "sum": 850.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 94889.47083333333,
+      "max": 95589.81666666667,
+      "sum": 379557.8833333333
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1607.0,
+       "accumulateBackPressuredTimeMs": 718.0,
+       "accumulateBusyTimeMs": 6630.0,
+       "numRecordsOut": 10612691.0
+      },
+      {
+       "accumulateIdleTimeMs": 1587.0,
+       "accumulateBackPressuredTimeMs": 655.0,
+       "accumulateBusyTimeMs": 6713.0,
+       "numRecordsOut": 10665670.0
+      },
+      {
+       "accumulateIdleTimeMs": 1478.0,
+       "accumulateBackPressuredTimeMs": -1100.0,
+       "accumulateBusyTimeMs": 8577.0,
+       "numRecordsOut": 10807835.0
+      },
+      {
+       "accumulateIdleTimeMs": 1624.0,
+       "accumulateBackPressuredTimeMs": -1054.0,
+       "accumulateBusyTimeMs": 8383.0,
+       "numRecordsOut": 10583203.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 496.75,
+      "max": 531.0,
+      "sum": 1987.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 503.25,
+      "max": 542.0,
+      "sum": 2013.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 2901.8875000000003,
+      "max": 2999.9333333333334,
+      "sum": 11607.550000000001
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 3915.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4917.0,
+       "numRecordsOut": 331349.0
+      },
+      {
+       "accumulateIdleTimeMs": 3706.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 5123.0,
+       "numRecordsOut": 322659.0
+      },
+      {
+       "accumulateIdleTimeMs": 3501.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 5331.0,
+       "numRecordsOut": 339467.0
+      },
+      {
+       "accumulateIdleTimeMs": 4064.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 4769.0,
+       "numRecordsOut": 319044.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927667.1471097,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 681.75,
+      "max": 697.0,
+      "sum": 2727.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 105.75,
+      "max": 110.0,
+      "sum": 423.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 212.5,
+      "max": 218.0,
+      "sum": 850.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 94889.47083333333,
+      "max": 95589.81666666667,
+      "sum": 379557.8833333333
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1736.0,
+       "accumulateBackPressuredTimeMs": 750.0,
+       "accumulateBusyTimeMs": 7471.0,
+       "numRecordsOut": 11943816.0
+      },
+      {
+       "accumulateIdleTimeMs": 1725.0,
+       "accumulateBackPressuredTimeMs": 697.0,
+       "accumulateBusyTimeMs": 7538.0,
+       "numRecordsOut": 12058608.0
+      },
+      {
+       "accumulateIdleTimeMs": 1610.0,
+       "accumulateBackPressuredTimeMs": -1064.0,
+       "accumulateBusyTimeMs": 9411.0,
+       "numRecordsOut": 12160230.0
+      },
+      {
+       "accumulateIdleTimeMs": 1773.0,
+       "accumulateBackPressuredTimeMs": -1015.0,
+       "accumulateBusyTimeMs": 9198.0,
+       "numRecordsOut": 11958848.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 496.75,
+      "max": 531.0,
+      "sum": 1987.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 503.25,
+      "max": 542.0,
+      "sum": 2013.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 2901.8875000000003,
+      "max": 2999.9333333333334,
+      "sum": 11607.550000000001
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 4267.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 5567.0,
+       "numRecordsOut": 376314.0
+      },
+      {
+       "accumulateIdleTimeMs": 4020.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 5811.0,
+       "numRecordsOut": 366659.0
+      },
+      {
+       "accumulateIdleTimeMs": 3784.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6050.0,
+       "numRecordsOut": 385544.0
+      },
+      {
+       "accumulateIdleTimeMs": 4438.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 5398.0,
+       "numRecordsOut": 362514.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927668.1472998,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 790.75,
+      "max": 837.0,
+      "sum": 3163.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 36.5,
+      "max": 76.0,
+      "sum": 146.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 172.75,
+      "max": 179.0,
+      "sum": 691.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 204145.57916666666,
+      "max": 206397.75,
+      "sum": 816582.3166666667
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 1848.0,
+       "accumulateBackPressuredTimeMs": 808.0,
+       "accumulateBusyTimeMs": 8301.0,
+       "numRecordsOut": 13302423.0
+      },
+      {
+       "accumulateIdleTimeMs": 1867.0,
+       "accumulateBackPressuredTimeMs": 736.0,
+       "accumulateBusyTimeMs": 8356.0,
+       "numRecordsOut": 13341025.0
+      },
+      {
+       "accumulateIdleTimeMs": 1742.0,
+       "accumulateBackPressuredTimeMs": -1029.0,
+       "accumulateBusyTimeMs": 10244.0,
+       "numRecordsOut": 13528803.0
+      },
+      {
+       "accumulateIdleTimeMs": 1918.0,
+       "accumulateBackPressuredTimeMs": -975.0,
+       "accumulateBusyTimeMs": 10010.0,
+       "numRecordsOut": 13319090.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 582.0,
+      "max": 618.0,
+      "sum": 2328.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 0.0,
+      "max": 0.0,
+      "sum": 0.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 418.0,
+      "max": 449.0,
+      "sum": 1672.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 6365.216666666667,
+      "max": 6598.983333333334,
+      "sum": 25460.86666666667
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 4603.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6232.0,
+       "numRecordsOut": 419030.0
+      },
+      {
+       "accumulateIdleTimeMs": 4357.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6474.0,
+       "numRecordsOut": 408082.0
+      },
+      {
+       "accumulateIdleTimeMs": 4073.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6763.0,
+       "numRecordsOut": 429233.0
+      },
+      {
+       "accumulateIdleTimeMs": 4809.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6029.0,
+       "numRecordsOut": 403721.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927669.1479225,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "busyTimeMsPerSecond": {
+      "avg": 790.75,
+      "max": 837.0,
+      "sum": 3163.0
+     },
+     "backPressuredTimeMsPerSecond": {
+      "avg": 36.5,
+      "max": 76.0,
+      "sum": 146.0
+     },
+     "idleTimeMsPerSecond": {
+      "avg": 172.75,
+      "max": 179.0,
+      "sum": 691.0
+     },
+     "numRecordsOutPerSecond": {
+      "avg": 204145.57916666666,
+      "max": 206397.75,
+      "sum": 816582.3166666667
+     },
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 2000.0,
+       "accumulateBackPressuredTimeMs": 833.0,
+       "accumulateBusyTimeMs": 9128.0,
+       "numRecordsOut": 14633196.0
+      },
+      {
+       "accumulateIdleTimeMs": 2022.0,
+       "accumulateBackPressuredTimeMs": 768.0,
+       "accumulateBusyTimeMs": 9172.0,
+       "numRecordsOut": 14681335.0
+      },
+      {
+       "accumulateIdleTimeMs": 1871.0,
+       "accumulateBackPressuredTimeMs": -1005.0,
+       "accumulateBusyTimeMs": 11095.0,
+       "numRecordsOut": 14898300.0
+      },
+      {
+       "accumulateIdleTimeMs": 2088.0,
+       "accumulateBackPressuredTimeMs": -959.0,
+       "accumulateBusyTimeMs": 10829.0,
+       "numRecordsOut": 14683117.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 4936.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6902.0,
+       "numRecordsOut": 460333.0
+      },
+      {
+       "accumulateIdleTimeMs": 4707.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 7128.0,
+       "numRecordsOut": 448285.0
+      },
+      {
+       "accumulateIdleTimeMs": 4399.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 7441.0,
+       "numRecordsOut": 471315.0
+      },
+      {
+       "accumulateIdleTimeMs": 5148.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6693.0,
+       "numRecordsOut": 443527.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927670.1480606,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "RUNNING",
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 2000.0,
+       "accumulateBackPressuredTimeMs": 833.0,
+       "accumulateBusyTimeMs": 9128.0,
+       "numRecordsOut": 14633196.0
+      },
+      {
+       "accumulateIdleTimeMs": 2022.0,
+       "accumulateBackPressuredTimeMs": 768.0,
+       "accumulateBusyTimeMs": 9172.0,
+       "numRecordsOut": 14681335.0
+      },
+      {
+       "accumulateIdleTimeMs": 1871.0,
+       "accumulateBackPressuredTimeMs": -1005.0,
+       "accumulateBusyTimeMs": 11095.0,
+       "numRecordsOut": 14898300.0
+      },
+      {
+       "accumulateIdleTimeMs": 2088.0,
+       "accumulateBackPressuredTimeMs": -959.0,
+       "accumulateBusyTimeMs": 10829.0,
+       "numRecordsOut": 14683117.0
+      }
+     ]
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "RUNNING",
+     "subtasks": [
+      {
+       "accumulateIdleTimeMs": 4936.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6902.0,
+       "numRecordsOut": 460333.0
+      },
+      {
+       "accumulateIdleTimeMs": 4707.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 7128.0,
+       "numRecordsOut": 448285.0
+      },
+      {
+       "accumulateIdleTimeMs": 4399.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 7441.0,
+       "numRecordsOut": 471315.0
+      },
+      {
+       "accumulateIdleTimeMs": 5148.0,
+       "accumulateBackPressuredTimeMs": 0.0,
+       "accumulateBusyTimeMs": 6693.0,
+       "numRecordsOut": 443527.0
+      }
+     ]
+    }
+   }
+  },
+  {
+   "t": 1794927671.1493895,
+   "state": "FINISHED",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "FINISHED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "FINISHED"
+    }
+   }
+  }
+ ]
+}

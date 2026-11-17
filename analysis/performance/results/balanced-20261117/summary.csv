@@ -1,0 +1,10 @@
+engine,p,run,records,rps_job,rps_source,rps_steady,rps_meter_median,job_s,speedup_job,efficiency_job,speedup_source,efficiency_source,speedup_steady,efficiency_steady,busiest_vertex,busiest_busy_ms,busiest_busy_max_ms,source_backpressure_ms,source_busiest_share,keyed_busiest_share,cpu_broker,cpu_jobmanager,cpu_taskmanager,verify
+flink,1,1,59386164,1015565,1025013,1126557,441996,58.48,1.0,1.0,1.0,1.0,0.939,0.939,Source: tick-topic -> drop-heartbeats,892.6,892.6,69.5,1.0,1.0,4.2,5.4,92.7,identical
+flink,1,2,59386164,999616,1006750,1199255,412612,59.41,0.984,0.984,0.982,0.982,1.0,1.0,Source: tick-topic -> drop-heartbeats,871.8,871.8,43.6,1.0,1.0,4.1,4.8,93.3,
+flink,1,3,59386164,1279488,1290807,1426428,416534,46.41,1.26,1.26,1.259,1.259,1.189,1.189,Source: tick-topic -> drop-heartbeats,835.8,835.8,78.7,1.0,1.0,4.1,4.3,91.6,
+flink,2,1,59386164,2187013,2217557,2537254,310423,27.15,2.153,1.077,2.163,1.082,2.116,1.058,Source: tick-topic -> drop-heartbeats,856.9,858.2,58.2,0.5004,0.508,6.7,5.5,184.7,identical
+flink,2,2,59386164,2273155,2307155,2621353,308873,26.12,2.238,1.119,2.251,1.125,2.186,1.093,Source: tick-topic -> drop-heartbeats,825.5,828.3,70.5,0.5004,0.508,6.9,5.9,182.2,
+flink,2,3,59386164,2240057,2276902,2397369,279215,26.51,2.206,1.103,2.221,1.111,1.999,1.0,Source: tick-topic -> drop-heartbeats,947.5,948.1,-41.8,0.5004,0.508,7.5,6.0,182.4,
+flink,4,1,59386164,4425199,4558698,6608009,363928,13.42,4.357,1.089,4.447,1.112,5.51,1.378,Source: tick-topic -> drop-heartbeats,840.5,1033.3,50.0,0.2509,0.275,12.8,7.8,367.1,identical
+flink,4,2,59386164,4504070,4635560,6750963,0,13.19,4.435,1.109,4.522,1.131,5.629,1.407,Source: tick-topic -> drop-heartbeats,883.1,1001.8,-52.8,0.2509,0.275,11.8,8.7,331.7,
+flink,4,3,59386164,4117463,4238539,4789758,303980,14.42,4.054,1.014,4.135,1.034,3.994,0.998,Source: tick-topic -> drop-heartbeats,832.1,842.0,40.0,0.2509,0.275,11.5,8.8,328.9,

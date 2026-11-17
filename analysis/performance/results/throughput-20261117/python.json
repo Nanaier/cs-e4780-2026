@@ -1,0 +1,75 @@
+{
+ "engine": "python",
+ "p": 1,
+ "run": 1,
+ "topic": "bench-week-q",
+ "records": 59386164,
+ "ooo_ms": 300,
+ "metrics": {
+  "source": "localhost:9092",
+  "params": {
+   "out_of_orderness_ms": 300,
+   "empty_window": "skip",
+   "suppress_first": false,
+   "subscriptions": "all"
+  },
+  "counts": {
+   "events": 59386164,
+   "late_events": 0,
+   "windows_closed": 940,
+   "ema_updates": 1855645,
+   "ema_emitted": 1855645,
+   "advisories": 11349,
+   "advisories_emitted": 11349,
+   "first_window_signals": 4970
+  },
+  "symbols": 4970,
+  "wall_seconds": 231.265,
+  "events_per_second": 256788,
+  "latency_unit": "ms, Kafka ingest to result",
+  "latency_ms": {
+   "p50": 700260,
+   "p95": 765529,
+   "p99": 766235,
+   "max": 766756
+  }
+ },
+ "throughput": {
+  "records_per_s_engine": 256788
+ },
+ "cpu_percent_mean": {
+  "broker": 2.1
+ },
+ "outputs": {
+  "ema": 1855645,
+  "advisories": 11349
+ },
+ "verify": {
+  "reference": "/root/cs-e4780-2026/out/week/reference-300",
+  "identical": true,
+  "ema": {
+   "left": 1855645,
+   "right": 1855645,
+   "matched": 1855645,
+   "mismatched": 0,
+   "only_left": 0,
+   "only_right": 0
+  },
+  "advisories": {
+   "left": 11349,
+   "right": 11349,
+   "matched": 11349,
+   "mismatched": 0,
+   "only_left": 0,
+   "only_right": 0
+  },
+  "collect": {
+   "isolation": "read_committed",
+   "counts": {
+    "ema": 1855645,
+    "advisories": 11349
+   }
+  },
+  "diff": "ema: left=1855645 right=1855645 matched=1855645 mismatched=0 only_left=0 only_right=0\nadvisories: left=11349 right=11349 matched=11349 mismatched=0 only_left=0 only_right=0\n"
+ }
+}
