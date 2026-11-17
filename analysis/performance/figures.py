@@ -1,4 +1,4 @@
-"""Figures and tables for the performance section (Person 2).
+"""Figures and tables for the performance section.
 
 Reads the run JSON files that `trading.bench` wrote and that were copied into analysis/performance/results/,
 and writes PNG figures and CSV tables into analysis/performance/figures/.
