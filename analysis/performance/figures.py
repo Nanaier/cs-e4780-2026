@@ -8,6 +8,8 @@ and writes PNG figures and CSV tables into analysis/performance/figures/.
     results/ft-alo-*/       10 s checkpoints, at-least-once sinks, p = 2, 4
     results/ft-eo-*/        10 s checkpoints, exactly-once sinks, p = 2, 4
     results/exchange-*/     exchange subsets (nl, nl-fr), p = 4
+    results/latency-*/      paced replays of 08.11 (scripts/latency_run.sh)
+    results/subscribers-*/  subscriber fan-out on 08.11, p = 2 (scripts/subscriber_scaling.sh)
 
 Usage: python analysis/performance/figures.py   (needs matplotlib: pip install -r analysis/performance/requirements.txt)
 """
@@ -196,6 +198,30 @@ def latency_vs_speed():
                         r["latency_ms_engine_stamp"]["p50"], r["latency_ms_engine_stamp"]["p99"]])
 
 
+def subscribers():
+    """Subscriber fan-out (day 08.11, p = 2): job throughput and gateway deliveries per subscriber count."""
+    rows = []
+    for d in sorted(RESULTS.glob("subscribers-*/*/")):
+        run = json.loads(next(d.glob("flink-p*-r*.json")).read_text())
+        gw_files = list(d.glob("gateway-*.json"))
+        gw = json.loads(gw_files[0].read_text()) if gw_files else None
+        n = gw["subscribers"] if gw else 0  # 0 = no subscriptions topic: every symbol is emitted
+        rows.append([n, gw["subscriptions"] if gw else "", gw["symbols_subscribed"] if gw else "",
+                     run["throughput"]["records_per_s_source"], run["outputs"]["ema"], run["outputs"]["advisories"],
+                     gw["counts"]["deliveries"] if gw else "", gw["deliveries_per_s"] if gw else "",
+                     gw["delay_ms_emit_to_delivery"]["p50"] if gw else "",
+                     gw["delay_ms_emit_to_delivery"]["p99"] if gw else "",
+                     "identical" if run["verify"]["identical"] else "DIFFERENT"])
+    if not rows:
+        return
+    rows.sort(key=lambda r: r[0])
+    with open(FIGURES / "subscribers.csv", "w", newline="") as fh:
+        w = csv.writer(fh)
+        w.writerow(["subscribers", "pairs", "symbols", "ticks_per_s_source", "ema_rows", "advisories", "deliveries",
+                    "deliveries_per_s", "delay_p50_ms", "delay_p99_ms", "verify"])
+        w.writerows(rows)
+
+
 def main():
     default = load("throughput-*")
     balanced = load("balanced-*")
@@ -205,6 +231,7 @@ def main():
         fault_tolerance(default, load("ft-alo-*"), load("ft-eo-*"))
     exchange_scaling(default)
     latency_vs_speed()
+    subscribers()
     print("figures in", FIGURES)
 
 

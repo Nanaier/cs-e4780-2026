@@ -1,0 +1,13 @@
+== correctness: Flink file mode p=1,2,4 vs reference-300, then unit tests
+  flink-file p=1 exit=0
+    ema: left=1855645 right=1855645 matched=1855645 mismatched=0 only_left=0 only_right=0
+    advisories: left=11349 right=11349 matched=11349 mismatched=0 only_left=0 only_right=0
+  flink-file p=2 exit=0
+    ema: left=1855645 right=1855645 matched=1855645 mismatched=0 only_left=0 only_right=0
+    advisories: left=11349 right=11349 matched=11349 mismatched=0 only_left=0 only_right=0
+  flink-file p=4 exit=0
+    ema: left=1855645 right=1855645 matched=1855645 mismatched=0 only_left=0 only_right=0
+    advisories: left=11349 right=11349 matched=11349 mismatched=0 only_left=0 only_right=0
+Ran 25 tests in 0.107s
+OK
+[INFO] BUILD SUCCESS

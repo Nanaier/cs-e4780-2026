@@ -1,0 +1,36 @@
+{
+  "subscriptions_topic": "scale-day08-subs-10000",
+  "subscribers": 10000,
+  "subscriptions": 200000,
+  "symbols_subscribed": 3486,
+  "counts": {
+    "ema": 365325,
+    "advisories": 3486,
+    "delivered_rows": 368811,
+    "deliveries": 23257394,
+    "subscription_updates": 0
+  },
+  "delivery_span_s": 8.073,
+  "busy_s": 2.963,
+  "deliveries_per_s": 2880968,
+  "deliveries_per_busy_s": 7850531,
+  "deliveries_per_subscriber": {
+    "p50": 2325,
+    "p95": 2441,
+    "p99": 2492,
+    "p99.9": 2548,
+    "max": 2596
+  },
+  "delay_ms_emit_to_delivery": {
+    "p50": 197,
+    "p95": 409,
+    "p99": 727,
+    "p99.9": 731,
+    "max": 732
+  },
+  "sample": [
+    "sub00001",
+    "sub00002",
+    "sub00003"
+  ]
+}

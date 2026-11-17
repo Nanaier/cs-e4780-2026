@@ -1,0 +1,11 @@
+{
+  "topic": "scale-day08-subs-1",
+  "action": "subscribe",
+  "mode": "popular",
+  "subscribers": 1,
+  "symbols_per_subscriber": 20,
+  "pairs": 20,
+  "symbols_in_data": 4840,
+  "union_symbols": 20,
+  "union_tick_share": 0.0258
+}

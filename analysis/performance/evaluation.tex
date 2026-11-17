@@ -12,7 +12,12 @@ and repeat every configuration three times (median, min--max). The first run of 
 compared with the batch reference and is identical in every case (1,855,645 EMA rows and 11,349
 advisories for the week).
 
-\todo{C: correctness paragraph (three-way diff file/Kafka/Python vs reference, unit tests).}
+\subsection{Correctness}
+We compare every engine row by row with the batch reference, which applies the same window, close, EMA
+and lateness rules in DuckDB. On the full week, the Flink job reading the tick files ($p=1,2,4$), the
+Flink job reading Kafka ($p=1,2,4$, including the runs with checkpoints and with a killed TaskManager)
+and the Python engine all produce exactly the reference's 1,855,645 EMA rows and 11,349 advisories, with
+no mismatched, missing or extra rows. The 25 unit tests of the windowing and EMA logic pass.
 
 \subsection{Throughput and speedup}
 Figure~\ref{fig:throughput} (left) shows the throughput for 1, 2 and 4 cores. One core processes
@@ -49,7 +54,13 @@ with 4,840 symbols per day, hashing alone keeps the busiest subtask within 10--1
 count-based partition map removes the source part of it. Hot and rare symbols see the same latency
 (Section~\ref{sec:latency}).
 
-\todo{Subscribers 1 to 10,000 (gateway fan-out), if we keep it in the report.}
+\emph{Subscribers.} The job computes every symbol and emits only subscribed ones; a gateway fans each
+result out to the subscribers of its symbol. With $N$ subscribers following 20 popular symbols each (day
+08.11, $p=2$), the job's throughput stays at 1.19--1.36\,M ticks/s from $N=1$ to $N=10{,}000$, because the
+computation does not depend on subscriptions. Only the fan-out grows: 10,000 subscribers (200,000
+subscriber--symbol pairs over 3,486 symbols) receive 23.3\,M deliveries at 2.9\,M deliveries/s, with a delay
+from result to delivery of 197\,ms at p50 and 727\,ms at p99. Every run equals the reference restricted to
+the subscribed symbols.
 
 \subsection{Latency under load}
 \label{sec:latency}
