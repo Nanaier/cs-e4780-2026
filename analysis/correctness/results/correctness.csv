@@ -1,0 +1,38 @@
+scenario,engine,source,p,input,subscribers,ema_rows,advisories,mismatched,missing,extra,duplicates_dropped,identical,file
+File source (Flink),flink,file,1,week,,1855645,11349,0,0,0,0,True,flink-file-and-unit-tests.txt
+File source (Flink),flink,file,2,week,,1855645,11349,0,0,0,0,True,flink-file-and-unit-tests.txt
+File source (Flink),flink,file,4,week,,1855645,11349,0,0,0,0,True,flink-file-and-unit-tests.txt
+File source (Flink),flink,file,1,synthetic,,43669,374,1634,0,10,0,False,synthetic-late-events.txt
+File source (Flink),flink,file,1,synthetic,,43669,374,0,0,0,0,True,synthetic-local.txt
+File source (Flink),flink,file,2,synthetic,,43669,374,1634,0,10,0,False,synthetic-late-events.txt
+File source (Flink),flink,file,2,synthetic,,43669,374,0,0,0,0,True,synthetic-local.txt
+File source (Flink),flink,file,4,synthetic,,43669,374,1634,0,10,0,False,synthetic-late-events.txt
+File source (Flink),flink,file,4,synthetic,,43669,374,0,0,0,0,True,synthetic-local.txt
+"File source (Flink), watermark per tick",flink,file,1,synthetic,,43659,374,0,0,0,0,True,synthetic-late-events.txt
+"File source (Flink), watermark per tick",flink,file,1,synthetic,,43669,374,0,0,0,0,True,synthetic-local.txt
+"File source (Flink), watermark per tick",flink,file,2,synthetic,,43659,374,0,0,0,0,True,synthetic-late-events.txt
+"File source (Flink), watermark per tick",flink,file,2,synthetic,,43669,374,0,0,0,0,True,synthetic-local.txt
+"File source (Flink), watermark per tick",flink,file,4,synthetic,,43659,374,0,0,0,0,True,synthetic-late-events.txt
+"File source (Flink), watermark per tick",flink,file,4,synthetic,,43669,374,0,0,0,0,True,synthetic-local.txt
+"Python engine, Kafka source",python,kafka,1,week,,1855645,11349,0,0,0,0,True,results/throughput-20261117/python.json
+"Python engine, file source",python,file,1,synthetic,,43659,374,0,0,0,0,True,synthetic-late-events.txt
+"Python engine, file source",python,file,1,synthetic,,43669,374,0,0,0,0,True,synthetic-local.txt
+"Kafka source, default partitioner",flink,kafka,1,week,,1855645,11349,0,0,0,0,True,results/throughput-20261117/flink-p1-r1.json
+"Kafka source, default partitioner",flink,kafka,2,week,,1855645,11349,0,0,0,0,True,results/throughput-20261117/flink-p2-r1.json
+"Kafka source, default partitioner",flink,kafka,4,week,,1855645,11349,0,0,0,0,True,results/throughput-20261117/flink-p4-r1.json
+"Kafka source, balanced partition map",flink,kafka,1,week,,1855645,11349,0,0,0,0,True,results/balanced-20261117/flink-p1-r1.json
+"Kafka source, balanced partition map",flink,kafka,2,week,,1855645,11349,0,0,0,0,True,results/balanced-20261117/flink-p2-r1.json
+"Kafka source, balanced partition map",flink,kafka,4,week,,1855645,11349,0,0,0,0,True,results/balanced-20261117/flink-p4-r1.json
+"10 s checkpoints, at-least-once sinks",flink,kafka,2,week,,1855645,11349,0,0,0,0,True,results/ft-alo-20261117/flink-p2-r1.json
+"10 s checkpoints, at-least-once sinks",flink,kafka,4,week,,1855645,11349,0,0,0,0,True,results/ft-alo-20261117/flink-p4-r1.json
+"10 s checkpoints, exactly-once sinks",flink,kafka,2,week,,1855645,11349,0,0,0,0,True,results/ft-eo-20261117/flink-p2-r1.json
+"10 s checkpoints, exactly-once sinks",flink,kafka,4,week,,1855645,11349,0,0,0,0,True,results/ft-eo-20261117/flink-p4-r1.json
+"TaskManager killed at 41 %, at-least-once + dedupe",flink,kafka,2,week,,1855645,11349,0,0,0,74308,True,results/recovery-alo-20261117/flink-p2-r1.json
+"TaskManager killed at 41 %, exactly-once",flink,kafka,2,week,,1855645,11349,0,0,0,0,True,results/recovery-eo-20261117/flink-p2-r1.json
+"Kafka source, Amsterdam + Paris only",flink,kafka,4,"week, NL+FR",,1298886,7458,0,0,0,0,True,results/exchange-nl-fr-20261117/flink-p4-r1.json
+"Kafka source, Amsterdam only",flink,kafka,4,"week, NL",,255249,1409,0,0,0,0,True,results/exchange-nl-20261117/flink-p4-r1.json
+"Subscriber filter: all symbols, 1-10,000 subscribers",flink,kafka,2,08.11,,373126,4840,0,0,0,0,True,results/subscribers-20261117/scale-day08-20261117-180753/flink-p2-r1.json
+"Subscriber filter: all symbols, 1-10,000 subscribers",flink,kafka,2,08.11,1,2305,20,0,0,0,0,True,results/subscribers-20261117/scale-day08-20261117-180835/flink-p2-r1.json
+"Subscriber filter: all symbols, 1-10,000 subscribers",flink,kafka,2,08.11,100,128021,1089,0,0,0,0,True,results/subscribers-20261117/scale-day08-20261117-180915/flink-p2-r1.json
+"Subscriber filter: all symbols, 1-10,000 subscribers",flink,kafka,2,08.11,1000,335868,2889,0,0,0,0,True,results/subscribers-20261117/scale-day08-20261117-180958/flink-p2-r1.json
+"Subscriber filter: all symbols, 1-10,000 subscribers",flink,kafka,2,08.11,10000,365325,3486,0,0,0,0,True,results/subscribers-20261117/scale-day08-20261117-181046/flink-p2-r1.json

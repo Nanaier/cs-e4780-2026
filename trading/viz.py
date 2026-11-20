@@ -200,8 +200,18 @@ render();
 
 
 def read_csv(path):
-    with Path(path).open() as fh:
+    with Path(path).open(newline="") as fh:
         return list(csv.DictReader(fh))
+
+
+def ema_rows(path, *names):
+    """Stream (symbol, window_end_ms, *names) from ema.csv without keeping it in memory (the week has 1.9M rows)."""
+    with Path(path).open(newline="") as fh:
+        reader = csv.reader(fh)
+        header = next(reader)
+        cols = [header.index(n) for n in ("symbol", "window_end_ms", *names)]
+        for row in reader:
+            yield [row[c] for c in cols]
 
 
 def first_window(advisory):
@@ -248,7 +258,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
 
     results = Path(args.results)
-    ema = read_csv(results / "ema.csv")
+    ema_path = results / "ema.csv"
     advisories = read_csv(results / "advisories.csv")
     metrics_path = results / "metrics.json"
     metrics = json.loads(metrics_path.read_text()) if metrics_path.exists() else None
@@ -256,13 +266,16 @@ def main(argv=None):
 
     per_symbol = defaultdict(lambda: {"buy": 0, "sell": 0, "first": 0, "last": None, "last_t": None, "rows": 0,
                                       "end": None, "trend": None})
-    for row in ema:
-        info = per_symbol[row["symbol"]]
+    ema_total = 0
+    for symbol, end, ema38, ema100 in ema_rows(ema_path, "ema38", "ema100"):  # pass 1: counts and current trend
+        ema_total += 1
+        info = per_symbol[symbol]
         info["rows"] += 1
-        end = int(row["window_end_ms"])
+        end = int(end)
         if info["end"] is None or end >= info["end"]:
             info["end"] = end
-            info["trend"] = "up" if float(row["ema38"]) > float(row["ema100"]) else "down"
+            info["trend"] = "up" if float(ema38) > float(ema100) else "down"
+    advisory_isin = {a["symbol"]: a["isin"] for a in advisories if a.get("isin")}  # --enrich output
     for a in advisories:
         info = per_symbol[a["symbol"]]
         if first_window(a):
@@ -276,24 +289,30 @@ def main(argv=None):
     chosen = choose(per_symbol, args.max_symbols, include)
 
     series = defaultdict(lambda: {"t": [], "c": [], "a": [], "b": []})
-    for row in ema:
-        if row["symbol"] in chosen:
-            s = series[row["symbol"]]
-            s["t"].append(int(row["window_end_ms"]) // 1000)
-            s["c"].append(round(float(row["close"]), 6))
-            s["a"].append(round(float(row["ema38"]), 6))
-            s["b"].append(round(float(row["ema100"]), 6))
+    for symbol, end, close, ema38, ema100 in ema_rows(ema_path, "close", "ema38", "ema100"):  # pass 2: chosen only
+        if symbol in chosen:
+            s = series[symbol]
+            s["t"].append(int(end) // 1000)
+            s["c"].append(round(float(close), 6))
+            s["a"].append(round(float(ema38), 6))
+            s["b"].append(round(float(ema100), 6))
+    for s in series.values():  # the chart needs ascending time; a multi-subtask engine may write out of order
+        if any(a > b for a, b in zip(s["t"], s["t"][1:])):
+            order = sorted(range(len(s["t"])), key=s["t"].__getitem__)
+            for k in s:
+                s[k] = [s[k][i] for i in order]
     shown_advisories = []
     for a in advisories:
         if a["symbol"] in chosen:
             shown_advisories.append({"s": a["symbol"], "t": int(a["window_end_ms"]) // 1000, "k": a["advisory"],
                                      "a": float(a["ema38"]), "b": float(a["ema100"]), "w": first_window(a)})
+    shown_advisories.sort(key=lambda a: (a["s"], a["t"]))  # chart markers must be in ascending time
 
     symbols = []
     for s in sorted(chosen):
         meta = metadata.get(s, {})
         info = per_symbol[s]
-        symbols.append({"s": s, "isin": meta.get("isin"), "index": meta.get("index"),
+        symbols.append({"s": s, "isin": meta.get("isin") or advisory_isin.get(s), "index": meta.get("index"),
                         "x": meta.get("exchange") or exchange_of(s), "k": meta.get("sec_type"),
                         "buy": info["buy"], "sell": info["sell"], "first": info["first"], "rows": info["rows"],
                         "trend": info["trend"], "last": info["last"], "last_t": info["last_t"]})
@@ -301,7 +320,7 @@ def main(argv=None):
         "symbols": symbols,
         "series": series,
         "advisories": shown_advisories,
-        "totals": {"ema": len(ema), "first": sum(first_window(a) for a in advisories)},
+        "totals": {"ema": ema_total, "first": sum(first_window(a) for a in advisories)},
         "metrics": metrics,
     }
     out = Path(args.out) if args.out else results / "dashboard.html"

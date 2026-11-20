@@ -1,4 +1,4 @@
-% Owner: Kristian. Included at the end of implementation.tex. Target length: 0.25 pages + figure.
+% Owner: Person 3 (Kristian). Follows design-space.tex. Target length: 0.25 pages + figure.
 \subsection{Dashboard}
 \label{sec:dashboard}
 
@@ -14,7 +14,8 @@ First-window advisories (Section~\ref{sec:design-space}) are hidden by default a
   \centering
   % TODO(Kristian): replace with a screenshot from real data (day 09 or the week, a well-known symbol with a BUY then a SELL), e.g.
   %   python -m trading.viz --results out/week/reference-300 --metadata data/week/metadata.parquet --include <SYMBOL>
-  \includegraphics[width=\linewidth]{figures/dashboard-synthetic.png}
+  %   then save it as analysis/correctness/figures/dashboard.png and change the file name below
+  \includegraphics[width=\linewidth]{dashboard-synthetic.png}
   \caption{Dashboard for one symbol: closing price per 5-minute window with EMA38 and EMA100 and the advisories (top), the EMA gap with its zero crossings (middle) and market breadth over the filtered symbols (bottom). \todo{real data}}
   \Description{Screenshot of the dashboard: a watchlist on the left, a price chart with two moving averages and buy and sell markers, a green and red shaded trend panel, and a histogram of buy minus sell advisories per hour.}
   \label{fig:dashboard}

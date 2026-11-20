@@ -1,7 +1,7 @@
-% Owner: Kristian. Target length: 0.2 pages. Revisit once Evaluation is final.
+% Shared draft (Person 3), to finish together on 25.11. Target length: 0.2 pages.
 \section{Conclusion}
 
-We built a streaming system that detects EMA crossovers for every symbol of three exchanges over a full trading week, and showed that it is both correct and fast: three independent implementations agree exactly on 1.86 million EMA values and 11,349 advisories, and the Flink job processes about 1.6 million events per second on four cores with a median delay of about 0.2\,s after a window can close.
+We built a streaming system that detects EMA crossovers for every symbol of three exchanges over a full trading week, and showed that it is both correct and fast: three independent implementations agree exactly on 1.86 million EMA values and 11,349 advisories, and the Flink job processes 4.1 million ticks per second on four cores with a median delay below 0.2\,s after a window can close.
 Treating correctness as a measurable property, through a batch oracle and a diff tool, made every optimisation and every new feature cheap to check.
 The data set analysis paid off as much as the engineering: the out-of-orderness bound, the quarantine and the heartbeats all follow from measured properties of the data, not from guesses.
 

@@ -1,5 +1,6 @@
-% Owner: Kristian. Included at the end of implementation.tex. Target length: 0.4 pages.
-% Source of every number: docs/decisions.md #1, #4, #5; synthetic counts reproduced on 16.11.2026
+% Owner: Person 3 (Kristian). Follows implementation.tex. Target length: 0.4 pages.
+% Sources: docs/decisions.md #1, #4, #5; week counts from analysis/performance/results/throughput-20261117/python.json
+% (first_window_signals = 4,970 = symbols); synthetic counts reproduced on 19.11.2026
 % (trading.engine on data/synthetic with --out-of-orderness-ms 900000, default vs --suppress-first vs --empty-window repeat).
 \subsection{Open questions in the specification}
 \label{sec:design-space}
@@ -12,7 +13,7 @@ Three choices change the output noticeably.
 With $\mathrm{EMA}_{j,w_0}=0$, a symbol's first closing price $c>0$ gives $\mathrm{EMA}_{38}=\frac{2c}{39} > \frac{2c}{101}=\mathrm{EMA}_{100}$ while both previous values are $0$, so the crossover rule fires a \emph{buy} for \emph{every} symbol in its first window, whatever the market does.
 On the first real day (08.11.2021) all 4,840 advisories are such artefacts, one per symbol.
 The weight of the initial zero in $\mathrm{EMA}_{100}$ decays as $(1-\frac{2}{101})^n$ and drops below 1\% only after $n=230$ windows, so the long average needs most of a trading day to reach the price level and genuine crossovers appear only from the second day.
-We keep these advisories by default, because the specification defines them and the batch oracle must match it, but mark them: the switch \texttt{--suppress-first} drops an advisory whose previous EMAs are both zero, which removes \todo{N\_symbols} of the week's 11,349 advisories \todo{B: count distinct symbols in out/week/reference-300/ema.csv} and leaves the EMA values untouched.
+We keep these advisories by default, because the specification defines them and the batch oracle must match it, but mark them: the switch \texttt{--suppress-first} drops the advisory of a symbol's first window, which removes 4,970 of the week's 11,349 advisories (one per symbol) and leaves 6,379 genuine crossovers, without changing any EMA value.
 The dashboard hides them by default and shows them as grey ``warm-up'' markers on request (Figure~\ref{fig:dashboard}).
 A subscriber that trades on the advisories should enable the switch; one that audits the specification should not.
 

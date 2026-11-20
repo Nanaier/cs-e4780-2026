@@ -1,0 +1,58 @@
+% Owner: Person 3 (Kristian). Target: 0.9 pages; main.tex follows it with design-space.tex and visualisation.tex.
+% Row classification and metadata rules are in the dataset section (Person 1); this section starts at the tick.
+\section{Implementation}
+\label{sec:implementation}
+
+The job is written against Flink~2.2.1's DataStream API in Java~17 (Kafka connector 5.0, Kafka~4.4 in KRaft
+mode); feed, oracle and tools are Python~3.12 with DuckDB. A tick reaching the operator carries the symbol (the
+key), the price, the event time in milliseconds, its position in the feed (\emph{seq}) and the time it was
+produced (for latency). Section~\ref{sec:dataset} explains which raw rows become ticks.
+
+\paragraph{Windows and close price.}
+A tick with event time $t$ belongs to the window starting at $t - (t \bmod 300{,}000)$. The trading timestamps
+are wall-clock times without a zone, and five minutes divide a day, so this aligns windows to midnight as the
+brief requires. Each open window keeps a single candidate close, the tick with the largest (event time, seq);
+a tick that arrives out of order but is newer replaces it, an older one does not. Per symbol, the open windows
+live in a \texttt{MapState} from window start to candidate, because a late tick can still belong to an earlier
+window than the newest one.
+
+\paragraph{Evaluating a window.}
+The first tick of a window registers an event-time timer at \emph{window end}$-1$. Flink fires it once the
+watermark, the largest event time seen minus the 300\,ms bound, reaches it, that is once a tick at least
+300\,ms past the window end has arrived on every partition. This is the brief's ``evaluated when the next
+window starts'' plus the tolerance for out-of-order ticks. A tick whose window has already fired is late; it
+goes to a side output and a counter instead of changing a published result. With a 300\,ms bound only the
+5,506 ticks stamped 18\,h before they arrived are late on the whole week (Section~\ref{sec:dataset}).
+Heartbeat records from the replay, sent to every partition, can carry event time across the evening gap so
+the last windows of a day close without waiting for the next morning (off by default).
+
+\paragraph{EMA state and crossovers.}
+When the timer fires, the operator removes the window's candidate and updates a \texttt{ValueState} holding
+$(\mathrm{EMA}_{38}, \mathrm{EMA}_{100})$ and a flag for whether the symbol has been evaluated before, starting
+from $(0, 0)$. The new values follow the brief's recurrence with $\alpha_j = 2/(1+j)$. The operator compares
+the new pair with the previous one: $\mathrm{EMA}_{38} > \mathrm{EMA}_{100}$ after
+$\mathrm{EMA}_{38} \le \mathrm{EMA}_{100}$ is a buy, the mirror case a sell. The EMA row goes to the main output,
+the advisory to a side output, both in the same timer call, so an advisory leaves at the same moment as the
+window's EMA. State persists across nights and the weekend; a window without trades produces no row and leaves
+the EMAs unchanged (Section~\ref{sec:design-space}). Every symbol is computed; whether its rows are emitted
+depends on the subscriptions, held as keyed state per symbol and updated from the \texttt{subscriptions}
+topic by a \texttt{KeyedCoProcessFunction}. At start-up the job holds event time back until it has read that
+topic to its end, so symbols subscribed beforehand receive every window.
+
+\paragraph{Watermarks in file mode.}
+Flink emits watermarks every 200\,ms of processing time. In a live feed this is far below the 300\,ms bound,
+but when the job reads files at millions of ticks per second the watermark lags, and a tick that the bound
+declares late may still be accepted. Our correctness runs exposed this on synthetic data with deliberately late
+ticks (Section~\ref{sec:correctness}). A switch, \texttt{--watermark-every-event}, emits the watermark on every
+tick that raises the maximum event time and reads the files as one ordered stream; the result then no longer
+depends on timing and equals the oracle at every parallelism. On the real week both settings give identical
+results, so the benchmarks keep Flink's default.
+
+\paragraph{Fault tolerance.}
+All operator state is keyed Flink state~\cite{carbone2017state}, so a checkpoint captures open windows, EMAs, subscriptions and the
+Kafka offsets together. With checkpoints every 10\,s and transactional Kafka sinks, a restarted job resumes
+from the last checkpoint and a \texttt{read\_committed} consumer sees every result exactly once; with
+at-least-once sinks the collector removes the replayed duplicates, which are always equal to the kept row.
+Both are off by default and measured in Section~\ref{sec:evaluation}.
+
+% followed by design-space.tex and visualisation.tex (main.tex inputs them)

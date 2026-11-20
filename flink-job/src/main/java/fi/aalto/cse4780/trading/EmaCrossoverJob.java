@@ -53,8 +53,10 @@ public final class EmaCrossoverJob {
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment(faultTolerance(params));
         env.setParallelism(params.getInt("parallelism", 1));
 
-        WatermarkStrategy<Tick> watermarks = WatermarkStrategy
-                .<Tick>forBoundedOutOfOrderness(Duration.ofMillis(params.getLong("out-of-orderness-ms", 0L)))
+        long bound = params.getLong("out-of-orderness-ms", 0L);
+        WatermarkStrategy<Tick> watermarks = (params.has("watermark-every-event")
+                ? WatermarkStrategy.<Tick>forGenerator(context -> new PerEventWatermarks(bound))
+                : WatermarkStrategy.<Tick>forBoundedOutOfOrderness(Duration.ofMillis(bound)))
                 .withTimestampAssigner((tick, recordTimestamp) -> tick.watermarkTs());
         Set<String> subscribedSymbols = loadSubscriptions(params.get("subscriptions", "all"));
         boolean suppressFirst = params.has("suppress-first");
@@ -84,10 +86,13 @@ public final class EmaCrossoverJob {
                 .setSplitAssigner(PathOrderSplitAssigner::new)
                 .build();
 
+        // --watermark-every-event: read and timestamp the files as one ordered stream (as reference.py models it),
+        // so the watermark does not depend on how the ticks are spread over parallel readers; keyed work stays at p.
+        int readers = params.has("watermark-every-event") ? 1 : env.getParallelism();
         SingleOutputStreamOperator<String> emaLines = env
-                .fromSource(source, WatermarkStrategy.noWatermarks(), "tick-files")
-                .map(Tick::parse)
-                .assignTimestampsAndWatermarks(watermarks)
+                .fromSource(source, WatermarkStrategy.noWatermarks(), "tick-files").setParallelism(readers)
+                .map(Tick::parse).setParallelism(readers)
+                .assignTimestampsAndWatermarks(watermarks).setParallelism(readers)
                 .keyBy(Tick::symbol)
                 .process(function);
 
