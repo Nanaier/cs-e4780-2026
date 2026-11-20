@@ -1,0 +1,61 @@
+% Owner: Person 3 (Kristian). Target: 0.8 pages including Figure 1.
+% Numbers: throughput from analysis/performance (Person 2), lag from analysis/dataset (Person 1).
+\section{System Architecture}
+\label{sec:architecture}
+
+\begin{figure*}[t]
+  \centering
+  \includegraphics[width=\textwidth]{architecture.pdf}
+  \caption{Architecture. The raw files are filtered and prepared once; \texttt{replay.py} turns them into a live
+  feed in Kafka; the Flink job computes both queries per symbol and writes results back to Kafka, from where a
+  gateway delivers them to subscribers and a collector feeds the dashboard. An independent batch implementation
+  (dashed) computes the same results offline, and every engine's output is compared with it row by row.}
+  \Description{Block diagram: data set, filter and prep, replay, Kafka topics, Flink job and Python engine,
+  gateway, dashboard and collector, with a batch oracle and a diff step underneath.}
+  \label{fig:architecture}
+\end{figure*}
+
+Figure~\ref{fig:architecture} shows the pipeline. It separates three concerns: turning the raw files into a
+faithful live feed, computing the two queries, and delivering the results, with correctness checked against
+an independent oracle rather than assumed.
+
+\paragraph{Feed.}
+A streaming filter keeps the price events and metadata rows of the 289M-row raw files and \texttt{prep.py}
+(DuckDB) stores them as Parquet with a parsed event time and the arrival order (Section~\ref{sec:dataset}).
+\texttt{replay.py} produces the ticks into a Kafka~\cite{kreps2011kafka} topic in their original order, as fast as possible or at a
+fixed multiple of real time. The record key is the symbol, so all ticks of a symbol land in one of the 8
+partitions in order; changed metadata travels in the same partition, and ticks stamped long before they arrived
+can be diverted to a quarantine topic. Replaying from files instead of reading a live exchange feed makes every
+run repeatable, which the correctness and performance comparisons depend on.
+
+\paragraph{Computation.}
+The Flink~\cite{carbone2015flink} job reads the ticks topic, assigns event-time watermarks~\cite{akidau2015dataflow}
+per partition with a 300\,ms
+out-of-orderness bound (the 99th percentile of the measured lag, Section~\ref{sec:dataset}), partitions the
+stream by symbol and runs one keyed operator that holds all per-symbol state (Section~\ref{sec:implementation}).
+EMA rows go to the \texttt{ema} topic, advisories to \texttt{advisories}. Because all state is keyed by symbol,
+the operator scales out with the number of key groups and needs no coordination between symbols. A compacted
+\texttt{subscriptions} topic, keyed by \emph{subscriber|symbol}, tells the job which symbols to emit; every
+symbol's EMAs are computed regardless, so a new subscriber gets correct values from the next window on.
+
+\paragraph{Delivery.}
+\texttt{gateway.py} fans each result out to the subscribers of its symbol through an inverted index, so the
+cost of many subscribers falls on the gateway and not on the job (Section~\ref{sec:evaluation}).
+\texttt{collect.py} reads the result topics into files and measures latency; the dashboard is built from those
+files (Section~\ref{sec:dashboard}).
+
+\paragraph{Design choices.}
+\emph{Event time, not processing time.} Windows are defined by the trading timestamps, so results do not depend
+on replay speed or machine load; processing-time windows would make every run different.
+\emph{A custom keyed operator instead of Flink's window API.} The EMA of a window depends on the previous
+window, and several windows of a symbol can be open at once while late ticks arrive; a
+\texttt{KeyedProcessFunction} keeps both in one place, whereas built-in tumbling windows would need extra global
+state to chain them.
+\emph{Watermarks per partition.} One global watermark would let a fast partition make the ticks of slower ones
+late; taking the minimum over partitions is what Flink does and what our Python engine mirrors.
+\emph{Flink rather than our own Python engine.} The Python engine implements the same operator in under 200
+lines of Python and is useful as a second, independent implementation, but processes 0.26\,M ticks/s on one core against
+1.2\,M for Flink on one core and 4.1\,M on four (Section~\ref{sec:evaluation}).
+\emph{An independent oracle.} \texttt{reference.py} computes the same windows, closes, EMAs and advisories as a
+batch job in DuckDB~\cite{raasveldt2019duckdb} with SQL window functions, sharing no code with the engines, so a bug in the streaming logic
+cannot hide in both.

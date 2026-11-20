@@ -19,8 +19,10 @@ BENCH_P ?= 1 2 4
 BENCH_RUNS ?= 3
 BENCH_OOO ?= 300
 BENCH_ARGS ?=
+WM_EVERY_EVENT ?=
+LABEL ?= synthetic-local
 
-.PHONY: venv test synthetic samples fetch-week filter-local prep-week stream reference diff dashboard demo kafka-up kafka-down replay stream-kafka flink-build flink-file flink-kafka diff-flink collect cluster-up cluster-down cluster-submit bench-preload bench scaling
+.PHONY: venv test synthetic samples fetch-week filter-local prep-week stream reference diff dashboard demo kafka-up kafka-down replay stream-kafka flink-build flink-file flink-kafka diff-flink collect cluster-up cluster-down cluster-submit bench-preload bench scaling correctness correctness-table architecture-figure
 
 venv:
 	python3.12 -m venv .venv
@@ -76,7 +78,7 @@ flink-build:
 	mvn -q -f flink-job/pom.xml package
 
 flink-file:
-	java -cp "$(FLINK_CP)" $(FLINK_MAIN) --source file --input $(TICKS) --out out/flink --out-of-orderness-ms $(OOO) --subscriptions $(SUBS) --parallelism $(P)
+	java -cp "$(FLINK_CP)" $(FLINK_MAIN) --source file --input $(TICKS) --out out/flink --out-of-orderness-ms $(OOO) --subscriptions $(SUBS) --parallelism $(P) $(if $(WM_EVERY_EVENT),--watermark-every-event)
 
 flink-kafka:
 	java -cp "$(FLINK_CP)" $(FLINK_MAIN) --source kafka --bootstrap localhost:9092 --topic ticks --out-of-orderness-ms $(OOO) --subscriptions $(SUBS) --parallelism $(P)
@@ -108,3 +110,13 @@ bench:
 
 scaling:
 	PY=$(PY) scripts/subscriber_scaling.sh
+
+# Person 3: every engine vs the batch reference on TICKS (file mode, Flink with and without --watermark-every-event)
+correctness:
+	$(PY) analysis/correctness/run_file_mode.py --ticks $(TICKS) --label $(LABEL) --bound-ms $(OOO) $(QUARANTINE)
+
+correctness-table:
+	$(PY) analysis/correctness/collect_verified.py
+
+architecture-figure:
+	$(PY) analysis/correctness/architecture_figure.py

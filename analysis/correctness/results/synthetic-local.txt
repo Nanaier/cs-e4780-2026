@@ -1,0 +1,25 @@
+== correctness (synthetic-local): file mode vs batch reference, bound 900000 ms, ticks data/synthetic/ticks
+  reference built in 0.6 s
+  python-file p=1 exit=0
+    ema: left=43669 right=43669 matched=43669 mismatched=0 only_left=0 only_right=0
+    advisories: left=374 right=374 matched=374 mismatched=0 only_left=0 only_right=0
+  flink-file p=1 exit=0
+    ema: left=43669 right=43669 matched=43669 mismatched=0 only_left=0 only_right=0
+    advisories: left=374 right=374 matched=374 mismatched=0 only_left=0 only_right=0
+  flink-file p=2 exit=0
+    ema: left=43669 right=43669 matched=43669 mismatched=0 only_left=0 only_right=0
+    advisories: left=374 right=374 matched=374 mismatched=0 only_left=0 only_right=0
+  flink-file p=4 exit=0
+    ema: left=43669 right=43669 matched=43669 mismatched=0 only_left=0 only_right=0
+    advisories: left=374 right=374 matched=374 mismatched=0 only_left=0 only_right=0
+  flink-file-ew p=1 exit=0
+    ema: left=43669 right=43669 matched=43669 mismatched=0 only_left=0 only_right=0
+    advisories: left=374 right=374 matched=374 mismatched=0 only_left=0 only_right=0
+  flink-file-ew p=2 exit=0
+    ema: left=43669 right=43669 matched=43669 mismatched=0 only_left=0 only_right=0
+    advisories: left=374 right=374 matched=374 mismatched=0 only_left=0 only_right=0
+  flink-file-ew p=4 exit=0
+    ema: left=43669 right=43669 matched=43669 mismatched=0 only_left=0 only_right=0
+    advisories: left=374 right=374 matched=374 mismatched=0 only_left=0 only_right=0
+Ran 29 tests in 0.443s
+OK
