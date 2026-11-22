@@ -31,9 +31,9 @@ python analysis/correctness/run_file_mode.py --ticks data/week/ticks --label wee
 
 ## Results (19.11.2026)
 
-* **Real data: 23 verified runs, all identical** to the reference, 32.7 M result rows compared: Flink file source
+* **Real data: 30 verified runs, all identical** to the reference, 37.9 M result rows compared (7 of them on the first two real days, rerun on a Windows laptop: `results/real-2days.txt`): Flink file source
   and Kafka source at p = 1, 2, 4 (default and balanced partitioner), 10 s checkpoints with at-least-once and
-  exactly-once sinks, a TaskManager killed at about 41 % (at-least-once: 74,308 duplicates, all equal to the kept
+  exactly-once sinks, a TaskManager killed mid-run (at-least-once: 74,308 duplicates, all equal to the kept
   row, removed by the collector), Amsterdam and Amsterdam + Paris subsets, 1 to 10,000 subscribers, and the Python
   engine. Runs by Person 2 (`analysis/performance/results`).
 * **Synthetic data with late ticks (2 s bound): Flink's default watermarks are timing-dependent.** The reference and

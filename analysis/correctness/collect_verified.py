@@ -26,8 +26,8 @@ SCENARIOS = [  # (directory prefix, label, order)
     ("balanced", "Kafka source, balanced partition map", 3),
     ("ft-alo", "10\\,s checkpoints, at-least-once sinks", 4),
     ("ft-eo", "10\\,s checkpoints, exactly-once sinks", 5),
-    ("recovery-alo", "TaskManager killed at 41\\,\\%, at-least-once + dedupe", 6),
-    ("recovery-eo", "TaskManager killed at 41\\,\\%, exactly-once", 7),
+    ("recovery-alo", "TaskManager killed mid-run, at-least-once + dedupe", 6),
+    ("recovery-eo", "TaskManager killed mid-run, exactly-once", 7),
     ("exchange-nl-fr", "Kafka source, Amsterdam + Paris only", 8),
     ("exchange-nl", "Kafka source, Amsterdam only", 8),
     ("subscribers", "Subscriber filter: all symbols, 1--10{,}000 subscribers", 9),
@@ -183,7 +183,8 @@ def main(argv=None):
         print(f"note: {perf} not found (performance branch not merged yet?); using local logs only")
     for folder in args.extra:
         for txt in sorted(Path(folder).glob("*.txt")):
-            rows += from_txt(txt, "synthetic" if "synthetic" in txt.name else "week")
+            name = "synthetic" if "synthetic" in txt.name else "08.--09.11" if "real-2days" in txt.name else "week"
+            rows += from_txt(txt, name)
     if not rows:
         raise SystemExit("no verified runs found")
 
