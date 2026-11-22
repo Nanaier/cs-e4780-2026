@@ -120,6 +120,24 @@ svg.viz .pt.live { cursor: pointer; stroke: var(--ink); }
 svg.viz .pt.sel { stroke: var(--ink); stroke-width: 2.5; }
 svg.viz rect.bar:hover { opacity: 0.8; }
 
+/* read-out above the price chart, split bars and side tables */
+.ro { display: flex; gap: 10px; overflow: hidden; font-size: 11px; color: var(--muted); flex: 1; min-width: 0; white-space: nowrap; }
+.ro b { color: var(--ink); font-weight: 600; }
+.ro i { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-right: 4px; }
+.side { padding: 6px 8px; }
+.side h3 { font-size: 11px; margin: 8px 0 4px; color: var(--accent); font-weight: 600; }
+.side h3:first-child { margin-top: 0; }
+.side h3 small { color: var(--faint); font-weight: 400; }
+.split { display: flex; height: 16px; font-size: 11px; font-weight: 600; color: #08130c; gap: 2px; }
+.split div { display: flex; align-items: center; padding: 0 6px; overflow: hidden; white-space: nowrap; border-radius: 2px; }
+.split .u { background: var(--up); } .split .d { background: var(--dn); justify-content: flex-end; }
+.split .e { background: var(--line-2); color: var(--muted); flex: 1; }
+.side .note { color: var(--faint); font-size: 11px; margin-top: 2px; }
+.side table td, .side table th { height: 17px; padding: 1px 4px; }
+i.bar { display: inline-block; height: 8px; vertical-align: 0; margin-right: 4px; border-radius: 1px; }
+i.gb { display: inline-block; height: 9px; border-radius: 1px; vertical-align: -1px; }
+footer { flex: none; display: flex; gap: 18px; flex-wrap: wrap; padding: 2px 10px; font-size: 11px; color: var(--faint); border-top: 1px solid var(--line-2); background: var(--head); }
+footer a { color: var(--accent); }
 #tip { position: fixed; z-index: 20; pointer-events: none; background: var(--head); border: 1px solid var(--line-2); padding: 4px 7px; max-width: 260px; box-shadow: 0 3px 12px rgba(0,0,0,0.35); }
 #help { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: grid; place-items: center; z-index: 30; }
 #help .box { background: var(--win); border: 1px solid var(--line-2); padding: 12px 18px; }
@@ -174,12 +192,14 @@ kbd { border: 1px solid var(--line-2); border-bottom-width: 2px; padding: 0 4px;
   </section>
 
   <section class="win B">
-    <div class="wh"><span class="ttl">Quote</span><span class="r n" id="b-sym"></span></div>
-    <div class="wb"><div class="quote"><div class="mini"><div class="chart" id="mini"></div></div><div class="kv" id="kv"></div></div></div>
+    <div class="wh"><button class="tab on" data-b="quote">Quote</button><button class="tab" data-b="sig">Signals</button><button class="tab" data-b="win">Windows</button><span class="r n" id="b-sym"></span></div>
+    <div class="wb" id="b-quote"><div class="quote"><div class="mini"><div class="chart" id="mini"></div></div><div class="kv" id="kv"></div></div></div>
+    <div class="wb scroll" id="b-sig" hidden></div>
+    <div class="wb scroll" id="b-win" hidden></div>
   </section>
 
   <section class="win C1">
-    <div class="wh"><span class="ttl" id="c1-t">Price</span><span class="fnt">close · <span style="color:var(--e38)">EMA38</span> · <span style="color:var(--e100)">EMA100</span> · <span class="up">▲</span><span class="dn">▼</span> signals</span>
+    <div class="wh"><span class="ttl" id="c1-t">Price</span><span class="ro n" id="readout"></span>
       <span class="r"><button class="tab" data-r="1">1D</button><button class="tab" data-r="3">3D</button><button class="tab on" data-r="0">All</button></span></div>
     <div class="wb"><div class="chart" id="price"></div></div>
   </section>
@@ -212,6 +232,8 @@ kbd { border: 1px solid var(--line-2); border-bottom-width: 2px; padding: 0 4px;
   </section>
 </div>
 
+<footer><span>Times are exchange local time. Both EMAs start at 0, so every symbol's first window is a warm-up BUY; it is hidden unless enabled.</span>
+  <span>Press <kbd>?</kbd> for keys</span><span>Charts: <a href="https://www.tradingview.com/" target="_blank" rel="noopener">TradingView Lightweight Charts</a></span></footer>
 <div id="tip" hidden></div>
 <div id="help" hidden><div class="box"><b>Keyboard</b><table>
   <tr><td><kbd>/</kbd></td><td>search the watchlist</td></tr>
@@ -348,16 +370,22 @@ $('quotes').addEventListener('click', e => { const q = e.target.closest('.qt'); 
 // ---------- watchlist table ----------
 const COLS = [
   ['tr', '', 'l'], ['s', 'Symbol', 'l'], ['k', 'Type', 'l'], ['x', 'Exch', 'l'], ['close', 'Last'], ['chg', 'Chg %'], ['a', 'EMA38'], ['b', 'EMA100'],
-  ['gap', 'Gap %'], ['sp', 'Gap, 5 h', 'l'], ['sig', 'Signal'], ['flips', 'Flips'], ['n', 'Windows'], ['isin', 'ISIN', 'l'],
+  ['gap', 'Gap %'], ['bar', 'Below / above', 'l'], ['sp', 'Gap, 5 h', 'l'], ['buy', 'Buy'], ['sell', 'Sell'], ['sig', 'Signal'], ['n', 'Windows'], ['isin', 'ISIN', 'l'],
 ];
+function counts(sym, t) {
+  let buy = 0, sell = 0;
+  (advBySym[sym] || []).forEach(a => { if (!a.w && a.t <= t) { if (a.k === 'BUY') buy++; else sell++; } });
+  return [buy, sell];
+}
 function rows() {
   const t = now(), q = st.q.toLowerCase();
-  const list = D.symbols.map(x => { const v = at(x.s, t), l = lastSig(x.s, t); return { x, v, l, fl: flips(x.s, t) }; }).filter(r =>
+  const list = D.symbols.map(x => { const v = at(x.s, t), l = lastSig(x.s, t), [bu, se] = counts(x.s, t); return { x, v, l, fl: bu + se, bu, se }; }).filter(r =>
     (!q || r.x.s.toLowerCase().includes(q) || (r.x.isin || '').toLowerCase().includes(q)) &&
     (!st.f.x || r.x.x === st.f.x) && (!st.f.k || r.x.k === st.f.k) && (!st.f.t || (r.v && (st.f.t === 'up') === r.v.up)));
   const key = {
     tr: r => (r.v ? (r.v.up ? 1 : -1) : 0), s: r => r.x.s, k: r => r.x.k || '', x: r => r.x.x || '', close: r => (r.v ? r.v.close : -1), chg: r => (r.v && r.v.chg !== null ? r.v.chg : -999),
-    a: r => (r.v ? r.v.a : -1), b: r => (r.v ? r.v.b : -1), gap: r => (r.v ? r.v.gap : -999), sp: r => (r.v ? Math.abs(r.v.gap) : 0), sig: r => (r.l ? r.l.t : 0), flips: r => r.fl, n: r => (r.v ? r.v.n : 0), isin: r => r.x.isin || '',
+    a: r => (r.v ? r.v.a : -1), b: r => (r.v ? r.v.b : -1), gap: r => (r.v ? r.v.gap : -999), bar: r => (r.v ? r.v.gap : -999), sp: r => (r.v ? Math.abs(r.v.gap) : 0),
+    buy: r => r.bu, sell: r => r.se, sig: r => (r.l ? r.l.t : 0), flips: r => r.fl, n: r => (r.v ? r.v.n : 0), isin: r => r.x.isin || '',
   }[st.sort];
   list.sort((p, q2) => { const a = key(p), b = key(q2); const c = typeof a === 'string' ? a.localeCompare(b) : a - b; return (st.desc ? -c : c) || p.x.s.localeCompare(q2.x.s); });
   return list;
@@ -371,7 +399,11 @@ function renderList() {
   const t = now(), list = rows();
   order = list.map(r => r.x.s);
   $('w-n').textContent = list.length + ' of ' + D.symbols.length + ' charted · ' + N(O.symbols) + ' in the data';
-  $('list').innerHTML = list.map(({ x, v, l, fl }) => {
+  const maxGap = Math.max(1e-9, ...list.map(r => (r.v ? Math.abs(r.v.gap) : 0)));
+  $('list').innerHTML = list.map(({ x, v, l, bu, se }) => {
+    const w = v ? Math.max(1, Math.round(Math.abs(v.gap) / maxGap * 34)) : 0;
+    const bar = v ? '<span style="display:inline-block;width:70px;position:relative;height:9px"><span style="position:absolute;left:35px;top:-2px;bottom:-2px;width:1px;background:var(--line-2)"></span>' +
+      '<i class="gb" style="position:absolute;' + (v.gap >= 0 ? 'left:36px' : 'right:35px') + ';width:' + w + 'px;background:var(--' + (v.gap >= 0 ? 'up' : 'dn') + ')"></i></span>' : '';
     const c = v && v.chg !== null ? (v.chg >= 0 ? 'cu' : 'cd') : '', g = v ? (v.gap >= 0 ? 'cu' : 'cd') : '';
     const sp = v ? '<svg width="70" height="14" viewBox="0 0 70 14"><path d="' + sparkPath(gapSeries(x.s, t, 60), 70, 14) + '" fill="none" stroke="var(--' + (v.up ? 'up' : 'dn') + ')" stroke-width="1.2"/></svg>' : '';
     const sig = l ? '<span class="' + (l.w ? 'wu' : l.k === 'BUY' ? 'up' : 'dn') + '">' + l.k + '</span> <span class="fnt">' + ddmm(l.t) + ' ' + hhmm(l.t) + '</span>' : '<span class="fnt">—</span>';
@@ -380,8 +412,8 @@ function renderList() {
       '<td class="l"><span class="dot" style="background:var(' + (XC[O.exchanges.indexOf(x.x)] || '--faint') + ')"></span>' + (x.x || '') + '</td>' +
       '<td class="n">' + (v ? N(v.close, 3) : '—') + '</td><td class="n ' + c + '">' + (v && v.chg !== null ? pct(v.chg) : '—') + '</td>' +
       '<td class="n">' + (v ? N(v.a, 3) : '—') + '</td><td class="n">' + (v ? N(v.b, 3) : '—') + '</td><td class="n ' + g + '">' + (v ? pct(v.gap, 3) : '—') + '</td>' +
-      '<td class="l">' + sp + '</td><td>' + sig + '</td><td class="n">' + fl + '</td><td class="n">' + (v ? v.n : 0) + '</td><td class="l n fnt">' + (x.isin || '') + '</td></tr>';
-  }).join('') || '<tr><td colspan="14" class="note l">Nothing matches.</td></tr>';
+      '<td class="l">' + bar + '</td><td class="l">' + sp + '</td><td class="n up">' + bu + '</td><td class="n dn">' + se + '</td><td>' + sig + '</td><td class="n">' + (v ? v.n : 0) + '</td><td class="l n fnt">' + (x.isin || '') + '</td></tr>';
+  }).join('') || '<tr><td colspan="16" class="note l">Nothing matches.</td></tr>';
 }
 $('list').addEventListener('click', e => { const r = e.target.closest('tr.go'); if (r) select(r.dataset.s); });
 $('q').addEventListener('input', e => { st.q = e.target.value; renderList(); });
@@ -408,6 +440,8 @@ function renderFocus() {
     gD.push({ time: s.t[k], value: s.b[k] ? (s.a[k] - s.b[k]) / Math.abs(s.b[k]) * 100 : 0 });
   }
   sClose.setData(cD); s38.setData(aD); s100.setData(bD); sGap.setData(gD);
+  shownIdx = new Map(s.t.slice(0, n).map((tm, k) => [tm, k]));
+  readout(); renderSide();
   const settled = gD.slice(Math.min(WARMUP, Math.floor(gD.length / 2))).map(p => p.value);
   const lo = Math.min(0, ...settled), hi = Math.max(0, ...settled), pad = (hi - lo) * 0.12 || 0.01;
   sGap.applyOptions({ autoscaleInfoProvider: () => ({ priceRange: { minValue: lo - pad, maxValue: hi + pad } }) });
@@ -445,12 +479,68 @@ function renderFocus() {
   const all = (advBySym[sym] || []).filter(a => !a.w), buys = all.filter(a => a.k === 'BUY').length;
   $('prof').innerHTML = '<h2><span>' + sym + '</span><span class="mut" style="font-size:12px;font-weight:400">' + [x.x, TYPE[x.k]].filter(Boolean).join(' · ') + '</span>' +
     '<span class="px n">' + f(v && v.close, 3) + '</span>' + (v && v.chg !== null ? '<span class="n ' + (v.chg >= 0 ? 'up' : 'dn') + '">' + pct(v.chg) + '</span>' : '') + '</h2><p>' + sentence + '</p>' +
-    '<table><tr><td class="mut">ISIN</td><td class="n">' + (x.isin || '—') + '</td><td class="mut">Index</td><td>' + (x.index || '—') + '</td></tr>' +
+    '<table><tr><td class="mut">ISIN</td><td class="n">' + (x.isin || '—') + '</td><td class="mut">Currency</td><td>' + (x.cur || '—') + '</td></tr>' +
+    '<tr><td class="mut">Venue</td><td>' + (VENUE[x.x] || x.x || '—') + '</td><td class="mut">Index</td><td>' + (x.index || '—') + '</td></tr>' +
     '<tr><td class="mut">Buys / sells</td><td class="n"><span class="up">' + buys + '</span> / <span class="dn">' + (all.length - buys) + '</span></td><td class="mut">Warm-up BUY</td><td class="n">' + (x.first ? stamp((advBySym[sym] || []).find(a => a.w).t) : '—') + '</td></tr>' +
     '<tr><td class="mut">First window</td><td class="n">' + stamp(first) + '</td><td class="mut">Last window</td><td class="n">' + stamp(lastT) + '</td></tr></table>';
   $('e-r').textContent = (VENUE[x.x] || '') + (x.isin ? ' · ' + x.isin : '');
   price.applyOptions({ watermark: { visible: true, text: sym.split('.')[0], color: css('--water'), fontSize: 64, horzAlign: 'center', vertAlign: 'center' } });
 }
+// ---------- read-out above the price chart (follows the cursor, else the playhead) ----------
+let shownIdx = new Map();
+function readout(k) {
+  const sym = st.sym, s = D.series[sym]; if (!s) return;
+  const n = upTo(s.t, now());
+  if (k === undefined || k >= n) k = n - 1;
+  if (k < 0) { $('readout').innerHTML = '<span>no windows yet</span>'; return; }
+  const g = s.b[k] ? (s.a[k] - s.b[k]) / Math.abs(s.b[k]) * 100 : 0;
+  $('readout').innerHTML = '<span>' + stamp(s.t[k]) + '</span>' +
+    '<span><i style="background:var(--close)"></i>Close <b>' + N(s.c[k], 3) + '</b></span>' +
+    '<span><i style="background:var(--e38)"></i>EMA38 <b>' + N(s.a[k], 3) + '</b></span>' +
+    '<span><i style="background:var(--e100)"></i>EMA100 <b>' + N(s.b[k], 3) + '</b></span>' +
+    '<span>Spread <b class="' + (g >= 0 ? 'up' : 'dn') + '">' + pct(g, 3) + '</b></span>';
+}
+[price, gap].forEach(c => c.subscribeCrosshairMove(p => { readout(p && p.time != null ? shownIdx.get(p.time) : undefined); }));
+
+// ---------- Quote window tabs: signals and latest windows of the selected symbol ----------
+function split(lu, ld, u, d, none) {
+  if (!u && !d) return '<div class="split"><div class="e">' + none + '</div></div>';
+  return '<div class="split">' + (u ? '<div class="u" style="flex:' + u + '">' + lu + '</div>' : '') + (d ? '<div class="d" style="flex:' + d + '">' + ld + '</div>' : '') + '</div>';
+}
+function renderSide() {
+  const sym = st.sym; if (!sym) return;
+  const s = D.series[sym], x = bySym[sym], t = now(), n = upTo(s.t, t);
+  const [bu, se] = counts(sym, t);
+  const from = Math.min(WARMUP, Math.floor(n / 2)); let up = 0;
+  for (let j = from; j < n; j++) if (s.a[j] > s.b[j]) up++;
+  const settled = n - from, upPct = settled ? Math.round(100 * up / settled) : 0;
+  let hi = -Infinity, lo = Infinity, sum = 0;
+  for (let j = 0; j < n; j++) { hi = Math.max(hi, s.c[j]); lo = Math.min(lo, s.c[j]); sum += s.c[j]; }
+  const days = new Map();
+  for (let j = 0; j < n; j++) { const d = dayStart(s.t[j] - 1); if (!days.has(d)) days.set(d, [0, 0]); }
+  (advBySym[sym] || []).forEach(a => { if (a.w || a.t > t) return; const d = days.get(dayStart(a.t - 1)); if (d) d[a.k === 'BUY' ? 0 : 1]++; });
+  const most = Math.max(1, ...[...days.values()].map(d => Math.max(d[0], d[1])));
+  const f = v => (n ? N(v, 3) : '—');
+  $('b-sig').innerHTML = '<div class="side"><h3>Crossover signals <small>after the EMA warm-up</small></h3>' + split('BUY ' + bu, 'SELL ' + se, bu, se, 'no crossover yet') +
+    '<div class="note">' + bu + ' buy and ' + se + ' sell advisories up to ' + hhmm(Math.min(t, O.t1)) + '</div>' +
+    '<h3>Trend share <small>of ' + N(settled) + ' settled windows</small></h3>' + split(upPct + '% up', (100 - upPct) + '% down', upPct, settled ? 100 - upPct : 0, 'no settled windows yet') +
+    '<h3>Close price' + (x.cur ? ' <small>in ' + x.cur + '</small>' : '') + '</h3><table><tr><th>Last</th><th>Average</th><th>High</th><th>Low</th></tr>' +
+    '<tr><td class="n">' + f(n ? s.c[n - 1] : 0) + '</td><td class="n">' + f(sum / (n || 1)) + '</td><td class="n">' + f(hi) + '</td><td class="n">' + f(lo) + '</td></tr></table>' +
+    '<h3>Crossovers by day</h3><table>' + [...days].map(([d, c]) => '<tr><td class="l">' + day(d) + '</td><td class="l"><i class="bar" style="background:var(--up);width:' + Math.round(c[0] / most * 40) + 'px"></i>' + c[0] + ' buy</td>' +
+      '<td class="l"><i class="bar" style="background:var(--dn);width:' + Math.round(c[1] / most * 40) + 'px"></i>' + c[1] + ' sell</td></tr>').join('') + '</table></div>';
+  const rowsW = [];
+  for (let j = n - 1; j >= Math.max(0, n - 40); j--) {
+    const g = s.b[j] ? (s.a[j] - s.b[j]) / Math.abs(s.b[j]) * 100 : 0;
+    rowsW.push('<tr><td class="l n">' + ddmm(s.t[j]) + ' ' + hhmm(s.t[j]) + '</td><td class="n">' + N(s.c[j], 3) + '</td><td class="n">' + N(s.a[j], 3) + '</td><td class="n">' + N(s.b[j], 3) + '</td><td class="n ' + (g >= 0 ? 'up' : 'dn') + '">' + pct(g, 3) + '</td></tr>');
+  }
+  $('b-win').innerHTML = '<table><thead><tr><th class="l">Window end</th><th>Close</th><th>EMA38</th><th>EMA100</th><th>Spread</th></tr></thead><tbody>' + (rowsW.join('') || '<tr><td colspan="5" class="note l">No windows yet.</td></tr>') + '</tbody></table>';
+}
+document.querySelectorAll('[data-b]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-b]').forEach(x => x.classList.toggle('on', x === b));
+  ['quote', 'sig', 'win'].forEach(k => { $('b-' + k).hidden = k !== b.dataset.b; });
+  if (b.dataset.b === 'quote') mini.timeScale().fitContent();
+});
+
 function select(sym) {
   if (!D.series[sym]) return;
   st.sym = sym; drawnFor = null;
