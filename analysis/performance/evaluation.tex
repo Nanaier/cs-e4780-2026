@@ -9,15 +9,9 @@ $0..p{-}1$ with $p$ slots, so parallelism $p$ equals the number of cores the job
 the full week (59,386,164 ticks; the 5,506 stale ticks of 10.11 go to a quarantine topic) from a preloaded
 topic, so the producer is not part of the measurement; we report records per second over the source's run
 and repeat every configuration three times (median, min--max). The first run of every configuration is
-compared with the batch reference and is identical in every case (1,855,645 EMA rows and 11,349
-advisories for the week).
+compared with the batch reference and is identical to it (Section~\ref{sec:correctness}).
 
-\subsection{Correctness}
-We compare every engine row by row with the batch reference, which applies the same window, close, EMA
-and lateness rules in DuckDB. On the full week, the Flink job reading the tick files ($p=1,2,4$), the
-Flink job reading Kafka ($p=1,2,4$, including the runs with checkpoints and with a killed TaskManager)
-and the Python engine all produce exactly the reference's 1,855,645 EMA rows and 11,349 advisories, with
-no mismatched, missing or extra rows. The 25 unit tests of the windowing and EMA logic pass.
+\input{correctness}
 
 \subsection{Throughput and speedup}
 Figure~\ref{fig:throughput} (left) shows the throughput for 1, 2 and 4 cores. One core processes
