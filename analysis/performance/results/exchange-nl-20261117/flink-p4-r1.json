@@ -1,0 +1,153 @@
+{
+ "engine": "flink",
+ "p": 4,
+ "run": 1,
+ "topic": "bench-nl-q",
+ "records": 6027115,
+ "ooo_ms": 300,
+ "cpusets": {
+  "broker": "4-5",
+  "jobmanager": "4-5",
+  "taskmanager": "0-3"
+ },
+ "job_id": "31cc58e6c31ddde8f38ba8a6ed5ee109",
+ "state": "FINISHED",
+ "job_ms": 3070,
+ "job_timestamps": {
+  "FINISHED": 1794927727193,
+  "CANCELED": 0,
+  "RESTARTING": 0,
+  "INITIALIZING": 1794927724123,
+  "FAILING": 0,
+  "CANCELLING": 0,
+  "RECONCILING": 0,
+  "RUNNING": 1794927724331,
+  "SUSPENDED": 0,
+  "CREATED": 1794927724280,
+  "FAILED": 0
+ },
+ "vertices": [
+  {
+   "name": "Source: tick-topic -> drop-heartbeats",
+   "parallelism": 4,
+   "duration_ms": 4451
+  },
+  {
+   "name": "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)",
+   "parallelism": 4,
+   "duration_ms": 4455
+  }
+ ],
+ "throughput": {
+  "records_per_s_job": 1963230,
+  "records_per_s_source": 1354104,
+  "records_per_s_steady": null,
+  "records_per_s_meter_median": null
+ },
+ "steady_window": {
+  "share": 0.8,
+  "samples": 0,
+  "source_seconds": null
+ },
+ "source_split": {
+  "records": [
+   1808088,
+   1493300,
+   1350646,
+   1375081
+  ],
+  "busiest_share": 0.3
+ },
+ "keyed_split": {
+  "records": [
+   1358377,
+   1474047,
+   1615141,
+   1579550
+  ],
+  "busiest_share": 0.268
+ },
+ "cpu_percent_mean": null,
+ "outputs": {
+  "ema": 255249,
+  "advisories": 1409
+ },
+ "verify": {
+  "reference": "/root/cs-e4780-2026/out/subsets/nl/reference-300",
+  "identical": true,
+  "ema": {
+   "left": 255249,
+   "right": 255249,
+   "matched": 255249,
+   "mismatched": 0,
+   "only_left": 0,
+   "only_right": 0
+  },
+  "advisories": {
+   "left": 1409,
+   "right": 1409,
+   "matched": 1409,
+   "mismatched": 0,
+   "only_left": 0,
+   "only_right": 0
+  },
+  "collect": {
+   "isolation": "read_committed",
+   "counts": {
+    "ema": 255249,
+    "advisories": 1409
+   }
+  },
+  "diff": "ema: left=255249 right=255249 matched=255249 mismatched=0 only_left=0 only_right=0\nadvisories: left=1409 right=1409 matched=1409 mismatched=0 only_left=0 only_right=0\n"
+ },
+ "samples": [
+  {
+   "t": 1794927724.4343095,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927725.4346266,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927726.4349446,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927727.4352572,
+   "state": "FINISHED",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "FINISHED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "FINISHED"
+    }
+   }
+  }
+ ]
+}

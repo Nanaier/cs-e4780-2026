@@ -1,0 +1,149 @@
+{
+ "engine": "flink",
+ "p": 4,
+ "run": 2,
+ "topic": "bench-nl-q",
+ "records": 6027115,
+ "ooo_ms": 300,
+ "cpusets": {
+  "broker": "4-5",
+  "jobmanager": "4-5",
+  "taskmanager": "0-3"
+ },
+ "job_id": "06d30d24df1cf40a09bed19dc43c04c0",
+ "state": "FINISHED",
+ "job_ms": 2323,
+ "job_timestamps": {
+  "RUNNING": 1794927752150,
+  "FAILED": 0,
+  "FAILING": 0,
+  "CANCELLING": 0,
+  "RECONCILING": 0,
+  "INITIALIZING": 1794927751935,
+  "CREATED": 1794927752103,
+  "RESTARTING": 0,
+  "FINISHED": 1794927754258,
+  "CANCELED": 0,
+  "SUSPENDED": 0
+ },
+ "vertices": [
+  {
+   "name": "Source: tick-topic -> drop-heartbeats",
+   "parallelism": 4,
+   "duration_ms": 1884
+  },
+  {
+   "name": "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)",
+   "parallelism": 4,
+   "duration_ms": 1892
+  }
+ ],
+ "throughput": {
+  "records_per_s_job": 2594539,
+  "records_per_s_source": 3199106,
+  "records_per_s_steady": null,
+  "records_per_s_meter_median": null
+ },
+ "steady_window": {
+  "share": 0.8,
+  "samples": 0,
+  "source_seconds": null
+ },
+ "source_split": {
+  "records": [
+   1808088,
+   1493300,
+   1350646,
+   1375081
+  ],
+  "busiest_share": 0.3
+ },
+ "keyed_split": {
+  "records": [
+   1358377,
+   1474047,
+   1615141,
+   1579550
+  ],
+  "busiest_share": 0.268
+ },
+ "cpu_percent_mean": null,
+ "outputs": {
+  "ema": 255249,
+  "advisories": 1409
+ },
+ "samples": [
+  {
+   "t": 1794927752.2916024,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927753.2917361,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927754.2919037,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927753.484209,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927754.4843464,
+   "state": "RUNNING",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "CREATED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "CREATED"
+    }
+   }
+  },
+  {
+   "t": 1794927755.4847083,
+   "state": "FINISHED",
+   "vertices": {
+    "Source: tick-topic -> drop-heartbeats": {
+     "status": "FINISHED"
+    },
+    "KeyedProcess -> (Sink: Writer -> Sink: Committer, Sink: Writer -> Sink: Committer)": {
+     "status": "FINISHED"
+    }
+   }
+  }
+ ]
+}
