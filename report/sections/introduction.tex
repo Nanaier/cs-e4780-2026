@@ -1,0 +1,27 @@
+% Draft by Person 3; the introduction belongs to Person 1 (Anastasiia), who may take it over or replace it
+% with analysis/dataset/introduction.tex (main.tex then uses hers). Target length: 0.4 pages.
+\section{Introduction}
+
+Electronic exchanges publish a continuous stream of price events for tens of thousands of instruments.
+A common way to read a trend from such a stream is to compare a fast and a slow exponential moving average of the price: when the fast average rises above the slow one, the recent trend is upward (a \emph{bullish} crossover, a buy signal), and when it falls below, the trend is downward (a \emph{bearish} crossover, a sell signal).
+The DEBS 2022 Grand Challenge~\cite{frischbier2022debs} turned this into a benchmark on one week of real tick data from Infront Financial Technology~\cite{frischbier2022dataset}, covering Euronext Paris (FR), Euronext Amsterdam (NL) and Xetra Frankfurt (ETR).
+
+The project asks for two continuous queries.
+\textbf{Query~1} computes, for every symbol $s$ and every 5-minute tumbling window $w_i$, the exponential moving averages
+$\mathrm{EMA}^{s}_{j,w_i} = \mathrm{close}_{w_i}\cdot\frac{2}{1+j} + \mathrm{EMA}^{s}_{j,w_{i-1}}\cdot\left(1-\frac{2}{1+j}\right)$ for $j \in \{38, 100\}$, where $\mathrm{close}_{w_i}$ is the last price observed in the window and $\mathrm{EMA}_{j,w_0}=0$.
+\textbf{Query~2} emits a buy advisory when $\mathrm{EMA}_{38}$ moves from at or below $\mathrm{EMA}_{100}$ to above it, and a sell advisory in the opposite case.
+Results are wanted only for the symbols a subscriber watches, as soon as a window is complete.
+
+The difficulty is not the arithmetic but doing it correctly and quickly at scale.
+Events arrive out of order and sometimes hours late; most rows of the raw data are not price events at all; the symbol distribution has a long tail, with a few hundred symbols carrying most of the volume; and the specification leaves several questions open, such as how to treat a window without trades.
+
+\paragraph{Contributions.}
+\begin{itemize}
+  \item A data set analysis of the full week (289M rows, 59.4M price events), which motivates the filter rules, the out-of-orderness bound and a quarantine for mis-stamped trades (Section~\ref{sec:dataset}).
+  \item A Kafka and Flink pipeline with event-time windows, per-partition watermarks, keyed EMA state, metadata and subscriptions as compacted control topics, heartbeats for idle evenings and exactly-once recovery (Sections~\ref{sec:architecture} and~\ref{sec:implementation}).
+  \item Three independent implementations (Flink, a Python stream engine and a DuckDB batch reference) that agree exactly on the whole week, so every performance number refers to a verified run.
+  \item An evaluation of throughput, latency, scaling with cores, exchanges and subscribers, and fault tolerance on commodity hardware (Section~\ref{sec:evaluation}).
+  \item An interactive dashboard and a documented design space of 16 specification ambiguities, each behind a switch (Section~\ref{sec:design-space}).
+\end{itemize}
+
+The code, the measured results and instructions to reproduce them are public at \url{https://github.com/Nanaier/cs-e4780-2026}.

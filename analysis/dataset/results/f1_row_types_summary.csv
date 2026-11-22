@@ -1,0 +1,8 @@
+kind,weekday_rows,weekday_pct,weekend_rows
+housekeeping,143061848,49.493,43143
+quote,80373034,27.805,38
+trade,59391670,20.547,0
+other,5863526,2.028,118
+zero_or_invalid_price,311203,0.108,5179
+metadata,56016,0.019,11033
+all,289057297,100.0,59511

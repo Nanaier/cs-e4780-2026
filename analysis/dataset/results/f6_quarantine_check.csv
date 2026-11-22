@@ -1,0 +1,6 @@
+measure,value
+left,reference.py --quarantine-ms 3600000 (no lateness bound)
+right,reference.py --late-bound-ms 300 (out/week/reference-300)
+identical,True
+diff,ema: left=1855645 right=1855645 matched=1855645 mismatched=0 only_left=0 only_right=0
+diff,advisories: left=11349 right=11349 matched=11349 mismatched=0 only_left=0 only_right=0

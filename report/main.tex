@@ -1,0 +1,65 @@
+% CS-E4780 course project report: assembly file for the merge session (25.11).
+% Each person's sections live in their own folder; this file only puts them together:
+%   analysis/dataset/      Person 1 (Anastasiia): introduction, dataset analysis, row handling
+%   analysis/performance/  Person 2 (Mario): evaluation (setup, throughput, scalability, latency, fault tolerance)
+%   analysis/correctness/  Person 3 (Kristian): architecture, implementation, correctness, visualisation
+%   report/sections/       shared: abstract, conclusion (written together), contributions (everyone)
+% Compile from this folder (pdflatex main && bibtex main && pdflatex main && pdflatex main), or upload the repo's
+% report/ and analysis/ folders to Overleaf keeping their relative position.
+\documentclass[sigconf,nonacm]{acmart}
+\settopmatter{printacmref=false, printccs=false, printfolios=true}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+
+\usepackage{booktabs}
+\usepackage{xcolor}
+\newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+
+% Bare file names in \input and \includegraphics resolve in every person's folder.
+\makeatletter
+\def\input@path{{sections/}{../analysis/correctness/sections/}{../analysis/correctness/results/}%
+  {../analysis/performance/}{../analysis/dataset/}}
+\makeatother
+\graphicspath{{figures/}{../analysis/correctness/figures/}{../analysis/performance/}%
+  {../analysis/performance/figures/}{../analysis/dataset/results/}}
+
+\begin{document}
+
+\title{Detecting Trading Trends in Financial Tick Data with Kafka and Flink}
+\subtitle{CS-E4780 Scalable Systems and Data Management, Course Project 2026}
+
+\author{Anastasiia Lysenko}
+\affiliation{\institution{Aalto University}\city{Espoo}\country{Finland}}
+\author{Mario Lupasciuc}
+\affiliation{\institution{Aalto University}\city{Espoo}\country{Finland}}
+\author{Kristian Lalev}
+\affiliation{\institution{Aalto University}\city{Espoo}\country{Finland}}
+
+\input{abstract}
+
+\maketitle
+
+% Person 1. introduction.tex in report/sections is a draft she may take over or replace.
+\InputIfFileExists{../analysis/dataset/introduction.tex}{}{\input{introduction}}
+\InputIfFileExists{../analysis/dataset/dataset.tex}{}{%
+  \section{Data Set Analysis}\label{sec:dataset}\todo{Person 1: analysis/dataset/dataset.tex}}
+
+% Person 3
+\input{architecture}
+\input{implementation}
+\input{design-space}
+\input{visualisation}
+
+% Person 2. evaluation.tex should contain \input{correctness} in place of its own correctness paragraph.
+\InputIfFileExists{../analysis/performance/evaluation.tex}{}{%
+  \section{Evaluation}\label{sec:evaluation}\todo{Person 2: analysis/performance/evaluation.tex}
+  \input{correctness}}
+
+\input{conclusion}
+
+\bibliographystyle{ACM-Reference-Format}
+\bibliography{references}
+
+\appendix
+\input{contributions}
+
+\end{document}

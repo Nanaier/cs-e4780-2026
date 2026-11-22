@@ -1,0 +1,8 @@
+heartbeat_margin_ms,ticks_behind_watermark,only_because_of_heartbeats,ticks_in_closed_window
+none,477549,,0
+0,12344,461,0
+300,7053,168,0
+500,6921,166,0
+700,5200,0,0
+1000,5106,0,0
+2000,4801,0,0

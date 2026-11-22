@@ -1,0 +1,22 @@
+% Owner: Person 3 (Kristian). Follows design-space.tex. Target length: 0.25 pages + figure.
+\subsection{Dashboard}
+\label{sec:dashboard}
+
+The results are meant for traders, so we built a dashboard that answers ``which of my symbols is trending, and since when?'' at a glance (Figure~\ref{fig:dashboard}).
+\texttt{trading/viz.py} turns the \texttt{ema.csv} and \texttt{advisories.csv} of any engine into one self-contained HTML page.
+A watchlist on the left shows, for each symbol, its current trend (EMA38 above or below EMA100), its exchange and security type, and its latest advisory; it can be filtered by exchange, security type and trend, searched by symbol or ISIN, and sorted by latest signal or number of crossovers.
+The main panel plots the closing price per window with both EMAs and the advisories as markers.
+Below it, a trend panel shows the gap $\mathrm{EMA}_{38}-\mathrm{EMA}_{100}$ in percent of $\mathrm{EMA}_{100}$, shaded green above zero and red below, so that every advisory is visible as a zero crossing.
+A market-breadth histogram counts buy minus sell advisories per hour over the symbols that match the filters.
+First-window advisories (Section~\ref{sec:design-space}) are hidden by default and shown as grey warm-up markers on request, and the price axis follows the closing prices so that the EMA warm-up from zero does not flatten the chart.
+
+\begin{figure}[t]
+  \centering
+  % TODO(Kristian): replace with a screenshot from real data (day 09 or the week, a well-known symbol with a BUY then a SELL), e.g.
+  %   python -m trading.viz --results out/week/reference-300 --metadata data/week/metadata.parquet --include <SYMBOL>
+  %   then save it as analysis/correctness/figures/dashboard.png and change the file name below
+  \includegraphics[width=\linewidth]{dashboard-synthetic.png}
+  \caption{Dashboard for one symbol: closing price per 5-minute window with EMA38 and EMA100 and the advisories (top), the EMA gap with its zero crossings (middle) and market breadth over the filtered symbols (bottom). \todo{real data}}
+  \Description{Screenshot of the dashboard: a watchlist on the left, a price chart with two moving averages and buy and sell markers, a green and red shaded trend panel, and a histogram of buy minus sell advisories per hour.}
+  \label{fig:dashboard}
+\end{figure}
