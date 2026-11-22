@@ -62,9 +62,12 @@ def load_metadata(path):
     if not path or not Path(path).exists():
         return {}
     import duckdb
-    rows = duckdb.sql(f"SELECT symbol, isin, related_indices, sec_type, exchange FROM read_parquet('{path}')").fetchall()
-    return {symbol: {"isin": isin, "index": index, "sec_type": sec_type, "exchange": exchange}
-            for symbol, isin, index, sec_type, exchange in rows}
+    columns = duckdb.sql(f"SELECT * FROM read_parquet('{path}') LIMIT 0").columns
+    currency = "currency" if "currency" in columns else "NULL"  # older metadata files have no currency column
+    rows = duckdb.sql(
+        f"SELECT symbol, isin, related_indices, sec_type, exchange, {currency} FROM read_parquet('{path}')").fetchall()
+    return {symbol: {"isin": isin, "index": index, "sec_type": sec_type, "exchange": exchange, "currency": cur}
+            for symbol, isin, index, sec_type, exchange, cur in rows}
 
 
 def overview(per_symbol, advisories, regime, hours, metadata):
@@ -162,6 +165,7 @@ def main(argv=None):
             info["end"] = end
             info["trend"] = "up" if float(ema38) > float(ema100) else "down"
     advisory_isin = {a["symbol"]: a["isin"] for a in advisories if a.get("isin")}  # --enrich output
+    advisory_currency = {a["symbol"]: a["currency"] for a in advisories if a.get("currency")}
     for a in advisories:
         info = per_symbol[a["symbol"]]
         if first_window(a):
@@ -199,6 +203,7 @@ def main(argv=None):
         meta = metadata.get(s, {})
         info = per_symbol[s]
         symbols.append({"s": s, "isin": meta.get("isin") or advisory_isin.get(s), "index": meta.get("index"),
+                        "cur": meta.get("currency") or advisory_currency.get(s),
                         "x": meta.get("exchange") or exchange_of(s), "k": meta.get("sec_type"),
                         "buy": info["buy"], "sell": info["sell"], "first": info["first"], "rows": info["rows"],
                         "trend": info["trend"], "last": info["last"], "last_t": info["last_t"]})
