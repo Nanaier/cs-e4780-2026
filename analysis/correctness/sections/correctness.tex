@@ -13,13 +13,15 @@ by comparing each tick with the running maximum event time of the ticks before i
 advisories that are missing, extra or different (prices and EMAs to a relative $10^{-9}$, advisory kinds,
 and ISIN and currency when present).
 
-Table~\ref{tab:correctness} lists every run we verified this way on real data. All 23 are identical to the
+Table~\ref{tab:correctness} lists every run we verified this way on real data. All 30 are identical to the
 reference: Flink reading the files and reading Kafka at $p=1,2,4$, with Kafka's default partitioner and with a
 balanced partition map, with 10\,s checkpoints and exactly-once or at-least-once sinks, after a TaskManager was
-killed mid-run, on single exchanges, and with 1 to 10{,}000 subscribers. In total 32.7\,M result rows were
+killed mid-run, on single exchanges, and with 1 to 10{,}000 subscribers. A second machine (a Windows laptop)
+repeated the file-mode runs on the first two real days, downloaded and prepared independently; every engine
+matched the reference there too (744{,}433 EMA rows and 5{,}016 advisories). In total 37.9\,M result rows were
 compared without a single difference. After the TaskManager kill with at-least-once sinks, the collector
 received 74{,}308 replayed rows twice; every duplicate was equal to the row it duplicated, so dropping them
-restores the reference. The 28 unit tests of the window, EMA, subscription, heartbeat, metadata and dashboard logic pass.
+restores the reference. The 33 unit tests of the window, EMA, subscription, heartbeat, metadata and dashboard logic pass.
 
 Agreement on the week does not prove agreement in general, because the week has almost no ticks close to the
 300\,ms bound. We therefore also ran every engine on three synthetic days that contain ticks arriving a few

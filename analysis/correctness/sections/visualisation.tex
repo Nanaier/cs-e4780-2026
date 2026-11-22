@@ -9,6 +9,7 @@ The main panel plots the closing price per window with both EMAs and the advisor
 Below it, a trend panel shows the gap $\mathrm{EMA}_{38}-\mathrm{EMA}_{100}$ in percent of $\mathrm{EMA}_{100}$, shaded green above zero and red below, so that every advisory is visible as a zero crossing.
 Side panels give the selected symbol's key data (exchange, ISIN, currency), its signal counts, its crossovers per day and its advisories.
 A market-breadth histogram counts buy minus sell advisories per hour over the symbols that match the filters, next to a tape of their latest advisories.
+A second view, \texttt{trading/monitor.py}, replays the data hour by hour, so every window shows the state the live system had at that moment, next to the real trades per minute of the week (Section~\ref{sec:dataset}).
 First-window advisories (Section~\ref{sec:design-space}) are hidden by default and shown as grey warm-up markers on request, and the price axis follows the closing prices so that the EMA warm-up from zero does not flatten the chart.
 
 \begin{figure}[t]

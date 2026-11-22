@@ -4,7 +4,7 @@
 Market participants want to know, per instrument and within seconds, when a short-term trend overtakes a long-term one.
 We build a streaming system that computes two exponential moving averages (EMA38 and EMA100) over 5-minute event-time windows for every symbol on three European exchanges, and emits a buy or sell advisory when they cross.
 The system replays the DEBS 2022 Grand Challenge trading data through Apache Kafka into a keyed Apache Flink job, and checks every result against an independent batch implementation in DuckDB.
-On the full week of 59.4 million price events, Flink at parallelism 1, 2 and 4 and our Python engine produce exactly the same 1,855,645 EMA values and 11,349 advisories as the batch oracle, in all 23 configurations we verified.
+On the full week of 59.4 million price events, Flink at parallelism 1, 2 and 4 and our Python engine produce exactly the same 1,855,645 EMA values and 11,349 advisories as the batch oracle, in all 30 configurations we verified on real data.
 Flink processes the week at 4.1 million ticks per second on four cores, emits results 0.14--0.19\,s (median) after a window can close at any replay speed we tried, recovers from a TaskManager failure in about 21\,s with exactly-once output, and serves up to 10,000 subscribers.
 We also analyse the data set and expose the choices the specification leaves open, such as the advisory every symbol raises in its first window and a burst of 18-hour-old index trades.
 \end{abstract}
