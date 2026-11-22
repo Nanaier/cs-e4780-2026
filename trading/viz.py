@@ -18,7 +18,7 @@ PAGE = """<!doctype html>
   --close: #1fa878; --close-top: rgba(31,168,120,0.42); --close-bottom: rgba(31,168,120,0.03); --e38: #d97706; --e100: #3d94e8; --first: #6f7c8f; }
 * { box-sizing: border-box; }
 html, body { height: 100%; }
-body { margin: 0; font: 12px/1.35 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+body { margin: 0; min-height: 840px; font: 12px/1.35 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
 button, input, select { font: inherit; color: inherit; }
 .BUY { color: var(--buy); } .SELL { color: var(--sell); } .FIRST { color: var(--first); }
 
@@ -101,7 +101,7 @@ td.n, th.n { text-align: right; }
 footer { padding: 3px 10px; color: var(--muted); font-size: 11px; border-top: 1px solid var(--line); display: flex; gap: 16px; flex-wrap: wrap; }
 footer a { color: var(--accent); }
 @media (max-width: 1150px) {
-  html, body { height: auto; } body { display: block; }
+  html, body { height: auto; } body { display: block; min-height: 0; }
   main { grid-template-columns: 1fr; grid-template-rows: none; grid-template-areas: "chart" "over" "side" "watch" "right"; }
   #p-chart { height: 520px; } #p-watch { height: 420px; } #p-over, #p-right { max-height: 520px; }
   .ticker, .clock { display: none; } #q { flex: 1; width: auto; }
