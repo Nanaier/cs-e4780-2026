@@ -41,6 +41,13 @@ class DashboardTest(unittest.TestCase):
         self.assertEqual((a["buy"], a["sell"], a["first"], a["last"], a["trend"], a["x"]), (0, 1, 1, "SELL", "down", "FR"))
         self.assertEqual([x["w"] for x in data["advisories"] if x["s"] == "A.FR"], [True, False])
 
+    def test_week_totals_cover_symbols_left_out_of_the_charts(self):
+        ema = [[f"S{i}.FR", 300000, "", 1, 1, 1] for i in range(3)]
+        adv = [[f"S{i}.FR", 300000, "", "SELL", 1, 2, 2, 1] for i in range(3)]
+        data = self.build(ema, adv, "--max-symbols", "1")
+        self.assertEqual(len(data["symbols"]), 1)
+        self.assertEqual(data["week"], {"symbols": 3, "buy": 0, "sell": 3})
+
     def test_every_exchange_is_represented_when_symbols_are_capped(self):
         ema = [[f"S{i}.FR", 300000, "", 1, 1, 1] for i in range(5)] + [["T.ETR", 300000, "", 1, 1, 1]]
         data = self.build(ema, [], "--max-symbols", "2")

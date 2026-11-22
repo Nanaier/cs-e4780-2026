@@ -588,13 +588,13 @@ document.querySelectorAll('[data-s].tab').forEach(b => b.onclick = () => { st.fe
 // ---------- signal clock (24 h, all days, warm-up excluded) ----------
 function drawClock() {
   const host = $('clk'); host.innerHTML = '';
-  const hours = Array.from({ length: 24 }, () => [0, 0]);
-  O.heat.cells.forEach(c => { hours[c[1]][0] += c[2]; hours[c[1]][1] += c[3]; });
+  const hours = Array.from({ length: 24 }, () => [0, 0]), t = now(), n = upTo(feedT, t);
+  for (let k = 0; k < n; k++) { const f = O.feed[k]; hours[Math.floor(((f[1] - 1) % 86400) / 3600)][f[2]]++; }
   const total = hours.reduce((s, h) => s + h[0] + h[1], 0), max = Math.max(1, ...hours.map(h => h[0] + h[1]));
   const svg = el('svg', { viewBox: '-90 -90 180 180', class: 'viz', role: 'img', 'aria-label': 'Crossovers by hour of day' }, host);
   [26, 46, 66].forEach(r => el('circle', { r, fill: 'none', stroke: 'var(--line)' }, svg));
   const steps = ['--s1', '--s2', '--s3', '--s4', '--s5'];
-  const mine = (advBySym[st.sym] || []).filter(a => !a.w).map(a => Math.floor(((a.t - 1) % 86400) / 3600));
+  const mine = (advBySym[st.sym] || []).filter(a => !a.w && a.t <= t).map(a => Math.floor(((a.t - 1) % 86400) / 3600));
   hours.forEach(([b, s], h) => {
     const v = b + s; if (!v) return;
     const r0 = 18, r = r0 + Math.sqrt(v / max) * 50, a0 = (h / 24) * 2 * Math.PI - Math.PI / 2 + 0.02, a1 = ((h + 1) / 24) * 2 * Math.PI - Math.PI / 2 - 0.02;
@@ -660,18 +660,34 @@ function drawFlips(host) {
   const step = Math.max(1, Math.ceil(my / 4)); for (let v = 0; v <= my; v += step) { el('line', { x1: L, x2: W - Rm, y1: y(v), y2: y(v) }, g); txt(svg, L - 4, y(v) + 3, v, { 'text-anchor': 'end' }); }
   txt(svg, (L + W) / 2, H - 3, 'windows with trades (log) vs flips · one dot per symbol', { 'text-anchor': 'middle' });
   const jit = k => ((k * 2654435761) % 997) / 997 - 0.5, sel = [];
-  pts.forEach((p, k) => {
-    const live = !!D.series[p[0]];
-    const c = el('circle', { cx: x(p[2]) + jit(k) * 2, cy: y(p[3]) + jit(k + 3) * 2.5, r: live ? 3.4 : 2.6, class: 'pt' + (live ? ' live' : ''), fill: 'var(' + XC[p[1]] + ')', 'fill-opacity': live ? 0.95 : 0.5 }, svg);
+  const dots = pts.map((p, k) => {
+    const live = !!D.series[p[0]], cur = { w: 0, f: 0 };
+    const c = el('circle', { r: live ? 3.4 : 2.6, class: 'pt' + (live ? ' live' : ''), fill: 'var(' + XC[p[1]] + ')', 'fill-opacity': live ? 0.95 : 0.5 }, svg);
     if (p[0] === st.sym) sel.push(c);
-    hover(c, '<b>' + p[0] + '</b><br>' + N(p[2]) + ' windows · ' + p[3] + ' flips' + (live ? '<br>click to chart it' : ''), live ? () => select(p[0]) : null);
+    hover(c, () => '<b>' + p[0] + '</b><br>' + N(cur.w) + ' windows · ' + cur.f + ' flips' + (live ? '<br>click to chart it' : ''), live ? () => select(p[0]) : null);
+    return { p, k, c, cur };
   });
   sel.forEach(c => { c.classList.add('sel'); svg.appendChild(c); });
+  flipsPlace = () => {
+    const n = upTo(feedT, now()), fl = {};
+    for (let k = 0; k < n; k++) fl[O.feed[k][0]] = (fl[O.feed[k][0]] || 0) + 1;
+    dots.forEach(({ p, k, c, cur }) => {
+      let w = 0;
+      for (let j = 0; j < p[4].length && p[4][j] <= st.i; j += 2) w += p[4][j + 1];
+      cur.w = w; cur.f = fl[p[0]] || 0;
+      if (!w) { c.setAttribute('display', 'none'); return; }
+      c.removeAttribute('display');
+      c.setAttribute('cx', x(Math.max(mn, w)) + jit(k) * 2);
+      c.setAttribute('cy', y(cur.f) + jit(k + 3) * 2.5);
+    });
+  };
+  flipsPlace();
 }
+let flipsPlace = null;
 function drawReal(host) {
   if (!R) { host.innerHTML = '<div class="note">Real-week statistics not found (analysis/dataset/results).</div>'; return; }
   const T = R.tables, get = (name, key) => Object.fromEntries((T[name] || []).map(r => [r[key], r]));
-  const kinds = T.f1_row_types_summary || [], ex = T.f2_by_exchange || [], ty = get('f2_by_sectype', 'sec_type'), tail = get('f3_long_tail_summary', 'measure');
+  const kinds = (T.f1_row_types_summary || []).filter(r => r.kind !== 'all'), ex = T.f2_by_exchange || [], ty = get('f2_by_sectype', 'sec_type'), tail = get('f3_long_tail_summary', 'measure');
   const rate = (T.f4_rate_summary || [])[0] || {}, win = get('f4_window_summary', 'measure'), lag = T.f5_out_of_order_lag || [], meta = (T.f8_metadata_coverage || [])[0] || {};
   const total = kinds.reduce((s, r) => s + +r.weekday_rows, 0);
   const row = (k, v, cls) => '<tr><td class="l mut">' + k + '</td><td class="n ' + (cls || '') + '">' + v + '</td></tr>';
@@ -722,8 +738,8 @@ function renderClock() {
   $('when').textContent = day(HOURS[st.i]) + ' ' + hhmm(HOURS[st.i]) + '–' + hhmm(Math.min(t, O.t1));
 }
 function tick(full) {
-  renderClock(); renderQuotes(); renderList(); renderFocus(); renderFeed(); renderActivity();
-  if (st.pA === 'days' || st.pA === 'xch') drawPanelA();
+  renderClock(); renderQuotes(); renderList(); renderFocus(); renderFeed(); renderActivity(); drawClock();
+  if (st.pA === 'flips' && flipsPlace) flipsPlace(); else if (st.pA !== 'real') drawPanelA();
 }
 function setHour(i, full) { st.i = Math.max(0, Math.min(HOURS.length - 1, i)); tick(full); }
 function jumpTo(t) { pause(); setHour(upTo(HOURS, t) - 1, true); }

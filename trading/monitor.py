@@ -70,19 +70,21 @@ def load_metadata(path):
             for symbol, isin, index, sec_type, exchange, cur in rows}
 
 
-def overview(per_symbol, advisories, regime, hours, metadata):
+def overview(per_symbol, advisories, regime, hours, metadata, by_hour):
     """Market-wide numbers: every symbol, not only the ones with a chart."""
     exch = {s: metadata.get(s, {}).get("exchange") or exchange_of(s) for s in per_symbol}
     present = set(exch.values()) - {None}
     exchanges = ([x for x in EXCHANGES if x in present] + sorted(present - set(EXCHANGES)))[:3]
     xi = {x: i for i, x in enumerate(exchanges)}
     xsym = [0] * len(exchanges)
+    position = {h: k for k, h in enumerate(sorted(hours))}
     scatter = []
     for s, info in per_symbol.items():
         i = xi.get(exch[s])
         if i is not None:
             xsym[i] += 1
-            scatter.append([s, i, info["rows"], info["buy"] + info["sell"]])
+            windows = [v for h, n in sorted(by_hour[s].items()) for v in (position[h], n)]
+            scatter.append([s, i, info["rows"], info["buy"] + info["sell"], windows])
 
     feed, cells = [], defaultdict(lambda: [0, 0])  # (day, hour) -> [buy, sell]
     for a in advisories:
@@ -149,12 +151,14 @@ def main(argv=None):
                                       "end": None, "trend": None})
     ema_total = 0
     hours = set()
+    by_hour = defaultdict(lambda: defaultdict(int))
     regime = defaultdict(lambda: [0, 0])  # hour -> [in an uptrend, settled symbol-windows]
     for symbol, end, ema38, ema100 in ema_rows(ema_path, "ema38", "ema100"):  # pass 1: counts and current trend
         ema_total += 1
         info = per_symbol[symbol]
         hour = (int(end) - 1) // 3_600_000 * 3600
         hours.add(hour)
+        by_hour[symbol][hour] += 1
         if info["rows"] >= WARMUP_WINDOWS:  # the symbol's EMA100 has settled, so its trend is real
             r = regime[hour]
             r[0] += float(ema38) > float(ema100)
@@ -208,7 +212,7 @@ def main(argv=None):
                         "buy": info["buy"], "sell": info["sell"], "first": info["first"], "rows": info["rows"],
                         "trend": info["trend"], "last": info["last"], "last_t": info["last_t"]})
     data = {
-        "overview": overview(per_symbol, advisories, regime, hours, metadata),
+        "overview": overview(per_symbol, advisories, regime, hours, metadata, by_hour),
         "symbols": symbols,
         "series": series,
         "advisories": shown_advisories,

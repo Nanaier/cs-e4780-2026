@@ -41,6 +41,13 @@ class MonitorTest(unittest.TestCase):
         self.assertEqual((a["buy"], a["sell"], a["first"], a["last"], a["trend"], a["x"]), (0, 1, 1, "SELL", "down", "FR"))
         self.assertEqual([x["w"] for x in data["advisories"] if x["s"] == "A.FR"], [True, False])
 
+    def test_scatter_counts_each_symbols_windows_per_replay_hour(self):
+        ema = [["A.FR", 300000, "", 1, 1, 1], ["A.FR", 3600000, "", 1, 1, 1], ["A.FR", 3900000, "", 1, 1, 1],
+               ["B.NL", 3900000, "", 1, 1, 1]]
+        data = self.build(ema, [])
+        self.assertEqual(data["overview"]["hours"], [0, 3600])
+        self.assertEqual({p[0]: p[4] for p in data["overview"]["scatter"]}, {"A.FR": [0, 2, 1, 1], "B.NL": [1, 1]})
+
     def test_every_exchange_is_represented_when_symbols_are_capped(self):
         ema = [[f"S{i}.FR", 300000, "", 1, 1, 1] for i in range(5)] + [["T.ETR", 300000, "", 1, 1, 1]]
         data = self.build(ema, [], "--max-symbols", "2")

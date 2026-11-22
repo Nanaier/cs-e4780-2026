@@ -120,11 +120,10 @@ footer a { color: var(--accent); }
   <span id="tabs-x"></span><span class="gap"></span>
   <span id="tabs-k"><button class="tab on" data-k="">All types</button> <button class="tab" data-k="E">Equities</button> <button class="tab" data-k="I">Indices</button></span>
   <span class="fill"></span>
-  <span class="stat">symbols <b id="n-sym"></b></span>
-  <span class="stat">EMA rows <b id="n-ema"></b></span>
+  <span class="stat">shown <b id="n-sym"></b> symbols</span>
   <span class="stat">buy <b id="n-buy"></b></span>
   <span class="stat">sell <b id="n-sell"></b></span>
-  <span class="stat">first-window signals <b id="n-first"></b></span>
+  <span class="stat" style="white-space: normal">week <b id="n-wsym"></b> symbols, <b id="n-ema"></b> EMA rows, buy <b id="n-wbuy"></b>, sell <b id="n-wsell"></b>, first-window <b id="n-first"></b></span>
   <span class="stat" id="perf"></span>
 </nav>
 <main>
@@ -197,6 +196,9 @@ D.symbols.forEach(x => {
 
 $('n-ema').textContent = D.totals.ema.toLocaleString();
 $('n-first').textContent = D.totals.first.toLocaleString();
+$('n-wsym').textContent = D.week.symbols.toLocaleString();
+$('n-wbuy').textContent = D.week.buy.toLocaleString();
+$('n-wsell').textContent = D.week.sell.toLocaleString();
 if (D.metrics && D.metrics.events_per_second) $('perf').innerHTML = 'throughput <b>' + Math.round(D.metrics.events_per_second).toLocaleString() + '</b> events/s, p99 latency <b>' + ((D.metrics.latency_ms || {}).p99 ?? '-') + '</b> ms';
 if (D.symbols.length) $('range').textContent = day(Math.min(...D.symbols.map(x => x.t0))) + ' - ' + day(Math.max(...D.symbols.map(x => x.t1))) + ' ' + new Date(D.symbols[0].t1 * 1000).getUTCFullYear();
 const exchanges = [...new Set(D.symbols.map(x => x.x).filter(Boolean))].sort();
@@ -204,7 +206,7 @@ $('tabs-x').innerHTML = '<button class="tab on" data-x="">All exchanges</button>
 
 // Ticker strip: the most active indices first, then other symbols.
 const strip = D.symbols.slice().sort((a, b) => (b.k === 'I') - (a.k === 'I') || b.rows - a.rows).slice(0, 6);
-$('ticker').innerHTML = strip.map(x => '<div class="tick" data-s="' + esc(x.s) + '">' + arrow(x.sp) + '<b>' + esc(x.s) + '</b><span class="' + side(x.sp) + '">' + pct(x.sp) + '</span><small>' + price(x.c) + '</small></div>').join('');
+$('ticker').innerHTML = strip.map(x => '<div class="tick" data-s="' + esc(x.s) + '">' + arrow(x.sp) + '<b>' + esc(x.s) + '</b><span class="' + side(x.sp) + '" title="EMA38 vs EMA100">spread ' + pct(x.sp) + '</span><small>' + price(x.c) + '</small></div>').join('');
 $('ticker').onclick = e => { const el = e.target.closest('.tick'); if (el) show(el.dataset.s); };
 
 const tick = (t, type) => type < 3 ? new Date(t * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', timeZone: 'UTC' }) : new Date(t * 1000).toISOString().slice(11, 16);
@@ -346,7 +348,7 @@ function render() {
   const buckets = new Map(), tape = [];
   D.advisories.forEach(a => {
     if (a.w || !names.has(a.s)) return;
-    const h = a.t - a.t % 3600;
+    const h = a.t - 1 - (a.t - 1) % 3600;
     buckets.set(h, (buckets.get(h) || 0) + (a.k === 'BUY' ? 1 : -1));
     tape.push(a);
   });
@@ -514,6 +516,8 @@ def main(argv=None):
         "series": series,
         "advisories": shown_advisories,
         "totals": {"ema": ema_total, "first": sum(first_window(a) for a in advisories)},
+        "week": {"symbols": len(per_symbol), "buy": sum(i["buy"] for i in per_symbol.values()),
+                 "sell": sum(i["sell"] for i in per_symbol.values())},
         "metrics": metrics,
     }
     out = Path(args.out) if args.out else results / "dashboard.html"
