@@ -1,4 +1,4 @@
-"""Replay monitor: a second, one-screen view of the results next to trading/viz.py.
+"""The dashboard: one screen in the style of a market data terminal (also built by `python -m trading.viz`).
 
 Every window follows a playhead that replays the data hour by hour; real-week statistics from analysis/dataset
 (trades per minute, exchange split, symbol ranks) are shown next to whatever results folder it is built from.
@@ -129,8 +129,8 @@ def choose(per_symbol, max_symbols, include):
     return set(chosen)
 
 
-def main(argv=None):
-    parser = argparse.ArgumentParser(description="Build the replay monitor (one HTML page) from ema.csv and advisories.csv")
+def main(argv=None, default_name="monitor.html"):
+    parser = argparse.ArgumentParser(description="Build the dashboard (one HTML page) from ema.csv and advisories.csv")
     parser.add_argument("--results", default="out/stream")
     parser.add_argument("--metadata", default=None, help="metadata.parquet from the prep step")
     parser.add_argument("--max-symbols", type=int, default=60)
@@ -222,7 +222,7 @@ def main(argv=None):
         "real": load_dataset(args.dataset),
     }
     page = TEMPLATE.read_text(encoding="utf-8")
-    out = Path(args.out) if args.out else results / "monitor.html"
+    out = Path(args.out) if args.out else results / default_name
     out.write_text(page.replace("__DATA__", json.dumps(data, separators=(",", ":")).replace("</", "<\\/")), encoding="utf-8")
     print(f"wrote {out} ({len(symbols)} symbols)")
 
