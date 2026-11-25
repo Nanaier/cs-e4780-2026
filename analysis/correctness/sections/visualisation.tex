@@ -4,18 +4,16 @@
 
 The results are meant for traders, so we built a dashboard in the style of a market data terminal that answers ``which of my symbols is trending, and since when?'' at a glance (Figure~\ref{fig:dashboard}).
 \texttt{trading/viz.py} turns the \texttt{ema.csv} and \texttt{advisories.csv} of any engine into one self-contained HTML page.
-A watchlist table shows, for each symbol, its last close, both EMAs, their gap as a bar, its buy and sell counts and its latest advisory; it can be filtered by exchange, security type and trend, searched by symbol or ISIN, and sorted by any column.
-The main panel plots the closing price per window with both EMAs and the advisories as markers, with a read-out that follows the cursor.
-Below it, a trend panel shows the gap $\mathrm{EMA}_{38}-\mathrm{EMA}_{100}$ in percent of $\mathrm{EMA}_{100}$, shaded green above zero and red below, so that every advisory is visible as a zero crossing.
-Side panels give the selected symbol's key data (exchange, ISIN, currency), its signal counts, its crossovers per day and its advisories.
-A market-breadth histogram counts buy minus sell advisories per hour over the symbols that match the filters, next to a tape of their latest advisories.
-A second view, \texttt{trading/monitor.py}, replays the data hour by hour, so every window shows the state the live system had at that moment, next to the real trades per minute of the week (Section~\ref{sec:dataset}).
-First-window advisories (Section~\ref{sec:design-space}) are hidden by default and shown as grey warm-up markers on request, and the price axis follows the closing prices so that the EMA warm-up from zero does not flatten the chart.
+A play button and a time slider replay the data hour by hour, and every window shows the state the live system had at that moment.
+A watchlist table shows, for each symbol, its last close, change, both EMAs, their gap as a bar and a sparkline, its buy and sell counts and its latest advisory; it can be filtered by exchange, security type and trend, searched by symbol or ISIN, and sorted by any column.
+The main panel plots the closing price per window with both EMAs and the advisories, with a read-out that follows the cursor; below it, the gap $\mathrm{EMA}_{38}-\mathrm{EMA}_{100}$ in percent of $\mathrm{EMA}_{100}$ is shaded green above zero and red below, so every advisory is a zero crossing.
+Side windows give the selected symbol's key data, signal counts, trend share and crossovers per day, and the market as a whole: a signal feed, signals per day and per exchange, a 24-hour signal clock, flips against activity for every symbol, and the real trades per minute of the week (Section~\ref{sec:dataset}).
+First-window advisories (Section~\ref{sec:design-space}) are hidden by default and shown as grey warm-up markers on request.
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{dashboard.png}
-  \caption{Dashboard on the week of real data, index ETE5P.FR selected: closing price per 5-minute window with EMA38 and EMA100 and the advisories (centre), the EMA gap with its zero crossings below it, the symbol's signal counts and key data (left and right), and the watchlist, market breadth and advisory tape (bottom).}
-  \Description{Screenshot of the dark dashboard: a price chart with two moving averages and buy and sell markers, a green and red shaded trend panel, side panels with the symbol's key data, a watchlist table, a histogram of buy minus sell advisories per hour and a list of the latest advisories.}
+  \caption{Dashboard on the real data of 08.--09.11.2021 at the end of the replay, Tesla on Xetra (A1CX3T.ETR) selected: it falls 9.6\,\% on 09.11 and EMA38 crosses below EMA100 at 16:55, a sell advisory. Around it: index quotes and the time slider (top), signals per day and the quote window (left), profile with the signal clock, the signal feed and the real trades per minute (right), and the watchlist (bottom).}
+  \Description{Screenshot of a terminal-style dashboard with tiled windows: index quotes and a time slider on top, bar charts and key figures on the left, a price chart with two moving averages and a sell marker in the centre, a profile, a radial chart, a signal table and an area chart on the right, and a table of symbols at the bottom.}
   \label{fig:dashboard}
 \end{figure}
